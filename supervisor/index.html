@@ -229,7 +229,7 @@
     if (type === "success") setTimeout(() => el.style.display = "none", 3000);
   }
 
-  function logout() { localStorage.clear(); window.location.href = "../staff-login.html"; }
+ function logout() { localStorage.clear(); window.location.href = "/mazoon-permits/staff-login.html"; }
   document.getElementById("nidInput").addEventListener("keydown", e => { if (e.key === "Enter") verifyCard(); });
   loadPermits();
 </script>
