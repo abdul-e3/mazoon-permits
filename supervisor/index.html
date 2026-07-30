@@ -151,7 +151,7 @@
 
   function showPage(e, page) {
     document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-    document.querySelectorAll(".sidebar-item").forEach(i => i.classList.remove("active"));
+   if (!staff || staff.role !== "supervisor") window.location.href = "/mazoon-permits/staff-login.html";
     document.getElementById("page-" + page).classList.add("active");
     e.currentTarget.classList.add("active");
     if (page === "permits") loadPermits();
