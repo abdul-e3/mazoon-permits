@@ -59,7 +59,7 @@
       const data = await res.json();
       if (!data.success) throw new Error(data.message || "بيانات غير صحيحة");
       localStorage.setItem("staff", JSON.stringify(data.user));
-      window.location.href = data.user.role === "supervisor" ? "../supervisor/index.html" : "../gate/index.html";
+      window.location.href = data.user.role === "supervisor" ? "/mazoon-permits/supervisor/index.html" : "/mazoon-permits/gate/index.html";
     } catch(e) { err.textContent = e.message; err.style.display = "block"; btn.disabled = false; btn.innerHTML = "دخول"; }
   }
   document.addEventListener("keydown", e => { if (e.key === "Enter") login(); });
