@@ -5,18 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>داش بورد المشرفة — كلية مزون</title>
   <style>
-    @import url("https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap");
+    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap');
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    :root { --blue: #1a3aad; --purple: #7b3fbe; --pink: #d976d6; --light: #f5f3ff; --dark: #1a1a2e; --gray: #6b7280; --border: #e2d9f3; --green: #16a34a; --red: #dc2626; }
-    body { font-family: "Tajawal", sans-serif; background: var(--light); color: var(--dark); min-height: 100vh; }
+    :root {
+      --blue: #1a3aad; --purple: #7b3fbe; --pink: #d976d6;
+      --light: #f5f3ff; --dark: #1a1a2e; --gray: #6b7280;
+      --border: #e2d9f3; --green: #16a34a; --red: #dc2626; --amber: #b45309;
+    }
+    body { font-family: 'Tajawal', sans-serif; background: var(--light); color: var(--dark); min-height: 100vh; }
     nav { background: linear-gradient(135deg, var(--blue), var(--purple)); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 64px; box-shadow: 0 4px 20px rgba(26,58,173,0.3); }
     .nav-brand { display: flex; align-items: center; gap: 12px; }
-    .nav-brand img { width: 40px; height: 40px; border-radius: 50%%; border: 2px solid rgba(255,255,255,0.8); object-fit: cover; }
+    .nav-brand img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.8); object-fit: cover; }
     .nav-brand span { color: white; font-size: 17px; font-weight: 700; }
     .nav-role { background: rgba(255,255,255,0.2); color: white; padding: 4px 12px; border-radius: 20px; font-size: 13px; margin-right: 8px; }
     .nav-left { display: flex; align-items: center; gap: 12px; }
     .nav-user { color: rgba(255,255,255,0.9); font-size: 14px; }
-    .btn-logout { background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 7px 16px; border-radius: 10px; font-family: "Tajawal", sans-serif; font-size: 13px; cursor: pointer; }
+    .btn-logout { background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 7px 16px; border-radius: 10px; font-family: 'Tajawal', sans-serif; font-size: 13px; cursor: pointer; }
     .layout { display: flex; min-height: calc(100vh - 64px); }
     .sidebar { width: 230px; background: white; border-left: 1px solid var(--border); padding: 20px 0; flex-shrink: 0; }
     .sidebar-item { display: flex; align-items: center; gap: 10px; padding: 13px 20px; font-size: 15px; color: var(--gray); cursor: pointer; transition: all 0.2s; border-right: 3px solid transparent; }
@@ -31,43 +35,48 @@
     .card { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px rgba(123,63,190,0.08); border: 1px solid var(--border); margin-bottom: 20px; }
     .card-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
     .reader-wrap { display: flex; gap: 12px; }
-    .reader-input { flex: 1; padding: 14px 18px; border: 2px solid var(--border); border-radius: 12px; font-family: "Tajawal", sans-serif; font-size: 16px; outline: none; background: var(--light); }
+    .reader-input { flex: 1; padding: 14px 18px; border: 2px solid var(--border); border-radius: 12px; font-family: 'Tajawal', sans-serif; font-size: 16px; outline: none; background: var(--light); }
     .reader-input:focus { border-color: var(--purple); background: white; }
-    .btn-verify { padding: 14px 24px; background: linear-gradient(135deg, var(--blue), var(--purple)); color: white; border: none; border-radius: 12px; font-family: "Tajawal", sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; }
+    .btn-verify { padding: 14px 24px; background: linear-gradient(135deg, var(--blue), var(--purple)); color: white; border: none; border-radius: 12px; font-family: 'Tajawal', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; }
+    .refresh-btn { background: var(--light); border: 1px solid var(--border); color: var(--purple); padding: 8px 16px; border-radius: 10px; font-family: 'Tajawal', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; margin-bottom: 16px; }
     .table-wrap { overflow-x: auto; }
-    table { width: 100%%; border-collapse: collapse; font-size: 14px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
     th { background: var(--light); color: var(--purple); padding: 12px 16px; text-align: right; font-weight: 700; border-bottom: 2px solid var(--border); }
     td { padding: 12px 16px; border-bottom: 1px solid var(--border); }
     tr:hover td { background: var(--light); }
-    .btn-open { background: linear-gradient(135deg, var(--blue), var(--purple)); color: white; border: none; padding: 7px 16px; border-radius: 8px; font-family: "Tajawal", sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .btn-open { background: linear-gradient(135deg, var(--blue), var(--purple)); color: white; border: none; padding: 7px 16px; border-radius: 8px; font-family: 'Tajawal', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; }
     .empty { text-align: center; padding: 48px; color: var(--gray); }
     .alert { padding: 12px 16px; border-radius: 10px; font-size: 14px; margin-bottom: 16px; display: none; }
     .alert-success { background: #f0fdf4; color: var(--green); border: 1px solid #bbf7d0; }
     .alert-error { background: #fef2f2; color: var(--red); border: 1px solid #fecaca; }
-    .spin { display: inline-block; width: 24px; height: 24px; border: 3px solid var(--border); border-top-color: var(--purple); border-radius: 50%%; animation: spin 0.7s linear infinite; }
+    .spin { display: inline-block; width: 24px; height: 24px; border: 3px solid var(--border); border-top-color: var(--purple); border-radius: 50%; animation: spin 0.7s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
+    .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+    .badge-pending { background: #fef9c3; color: var(--amber); }
+    .badge-entered { background: #e0e7ff; color: #3730a3; }
+    .badge-exited { background: #dcfce7; color: #166534; }
     .modal-overlay { position: fixed; inset: 0; background: rgba(26,26,46,0.6); z-index: 100; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px); }
     .modal-overlay.open { display: flex; }
-    .modal { background: white; border-radius: 20px; padding: 32px; width: 100%%; max-width: 600px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+    .modal { background: white; border-radius: 20px; padding: 32px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
     .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
     .modal-title { font-size: 20px; font-weight: 800; }
-    .btn-close { background: var(--light); border: none; width: 36px; height: 36px; border-radius: 50%%; font-size: 18px; cursor: pointer; }
+    .btn-close { background: var(--light); border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 18px; cursor: pointer; }
     .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
     .info-item { background: var(--light); border-radius: 10px; padding: 12px 16px; }
     .info-label { font-size: 12px; color: var(--gray); margin-bottom: 4px; }
     .info-value { font-size: 15px; font-weight: 600; }
     .field-wrap { margin-bottom: 16px; }
     .field-wrap label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; }
-    .field-wrap input { width: 100%%; padding: 12px 16px; border: 2px solid var(--border); border-radius: 12px; font-family: "Tajawal", sans-serif; font-size: 15px; outline: none; }
+    .field-wrap input { width: 100%; padding: 12px 16px; border: 2px solid var(--border); border-radius: 12px; font-family: 'Tajawal', sans-serif; font-size: 15px; outline: none; }
     .check-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
     .check-item { background: var(--light); border-radius: 12px; padding: 16px; }
     .check-label { font-size: 14px; font-weight: 600; margin-bottom: 10px; }
     .check-btns { display: flex; gap: 8px; }
-    .check-btn { flex: 1; padding: 10px; border: 2px solid var(--border); border-radius: 10px; font-family: "Tajawal", sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; background: white; transition: all 0.2s; }
+    .check-btn { flex: 1; padding: 10px; border: 2px solid var(--border); border-radius: 10px; font-family: 'Tajawal', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; background: white; transition: all 0.2s; }
     .check-btn.match { border-color: var(--green); background: #f0fdf4; color: var(--green); }
     .check-btn.no-match { border-color: var(--red); background: #fef2f2; color: var(--red); }
-    .btn-approve { width: 100%%; padding: 15px; background: linear-gradient(135deg, var(--blue), var(--purple)); color: white; border: none; border-radius: 14px; font-family: "Tajawal", sans-serif; font-size: 17px; font-weight: 700; cursor: pointer; }
-    .recent-item { background: var(--light); border-radius: 10px; padding: 12px 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+    .btn-approve { width: 100%; padding: 15px; background: linear-gradient(135deg, var(--blue), var(--purple)); color: white; border: none; border-radius: 14px; font-family: 'Tajawal', sans-serif; font-size: 17px; font-weight: 700; cursor: pointer; }
+    .wait-banner { background: #fef9c3; color: var(--amber); border: 1px solid #fde68a; padding: 14px 18px; border-radius: 12px; font-size: 14px; font-weight: 600; margin-bottom: 20px; text-align: center; }
   </style>
 </head>
 <body>
@@ -86,11 +95,13 @@
   <div class="sidebar">
     <div class="sidebar-item active" onclick="showPage(event, 'reader')">🪪 قارئ البطاقة</div>
     <div class="sidebar-item" onclick="showPage(event, 'permits')">قائمة التصاريح <span class="badge-count" id="pendingCount">0</span></div>
+    <div class="sidebar-item" onclick="showPage(event, 'archive')">📁 الأرشيف</div>
   </div>
   <div class="main">
+
     <div class="page active" id="page-reader">
       <div class="page-title">قارئ البطاقة الشخصية</div>
-      <div class="page-sub">أدخل الرقم المدني يدوياً أو عبر قارئ البطاقة</div>
+      <div class="page-sub">أدخل الرقم المدني للمصرح له — يعمل فقط بعد تأكيد الحارس دخول السيارة</div>
       <div class="divider"></div>
       <div class="card">
         <div class="card-title">🪪 إدخال الرقم المدني</div>
@@ -100,19 +111,27 @@
           <button class="btn-verify" onclick="verifyCard()">🔍 بحث</button>
         </div>
       </div>
-      <div class="card">
-        <div class="card-title">📋 الطلبات الواردة مباشرة</div>
-        <div id="recentList"><div class="empty">في انتظار الطلبات...</div></div>
-      </div>
     </div>
+
     <div class="page" id="page-permits">
-      <div class="page-title">قائمة التصاريح المعلقة</div>
-      <div class="page-sub">الطلبات التي تنتظر المراجعة والاعتماد</div>
+      <div class="page-title">قائمة التصاريح</div>
+      <div class="page-sub">الطلبات الجديدة وطلبات جاهزة للمراجعة (تختفي تلقائياً بعد اعتمادها)</div>
       <div class="divider"></div>
+      <button class="refresh-btn" onclick="loadPermits()">🔄 تحديث القائمة</button>
       <div class="card"><div id="permitsList"><div style="text-align:center;padding:30px"><div class="spin"></div></div></div></div>
     </div>
+
+    <div class="page" id="page-archive">
+      <div class="page-title">📁 الأرشيف</div>
+      <div class="page-sub">جميع التصاريح التي تم إتمام خروجها فعلياً</div>
+      <div class="divider"></div>
+      <button class="refresh-btn" onclick="loadArchive()">🔄 تحديث الأرشيف</button>
+      <div class="card"><div id="archiveList"><div style="text-align:center;padding:30px"><div class="spin"></div></div></div></div>
+    </div>
+
   </div>
 </div>
+
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
     <div class="modal-header">
@@ -121,117 +140,153 @@
     </div>
     <div class="divider"></div>
     <div id="modalAlert" class="alert"></div>
+    <div id="waitBanner" class="wait-banner" style="display:none">⏳ بانتظار تأكيد دخول السيارة من الحارس عند البوابة — لا يمكن اتخاذ أي إجراء حالياً</div>
     <div class="info-grid" id="permitInfo"></div>
-    <div class="field-wrap"><label>⏰ وقت الخروج الفعلي</label><input type="time" id="actualExitTime"></div>
-    <div class="check-grid">
-      <div class="check-item">
-        <div class="check-label">👤 المصرح له</div>
-        <div class="check-btns">
-          <button class="check-btn" id="btnPersonMatch" onclick="setCheck(this, &quot;person&quot;, true)">✅ مطابق</button>
-          <button class="check-btn" id="btnPersonNo" onclick="setCheck(this, &quot;person&quot;, false)">❌ غير مطابق</button>
+    <div id="actionSection">
+      <div class="field-wrap"><label>⏰ وقت الخروج الفعلي</label><input type="time" id="actualExitTime"></div>
+      <div class="check-grid">
+        <div class="check-item">
+          <div class="check-label">👤 المصرح له</div>
+          <div class="check-btns">
+            <button class="check-btn" id="btnPersonMatch" onclick="setCheck('person', true)">✅ مطابق</button>
+            <button class="check-btn" id="btnPersonNo" onclick="setCheck('person', false)">❌ غير مطابق</button>
+          </div>
+        </div>
+        <div class="check-item">
+          <div class="check-label">🚗 السيارة</div>
+          <div class="check-btns">
+            <button class="check-btn" id="btnCarMatch" onclick="setCheck('car', true)">✅ مطابقة</button>
+            <button class="check-btn" id="btnCarNo" onclick="setCheck('car', false)">❌ غير مطابقة</button>
+          </div>
         </div>
       </div>
-      <div class="check-item">
-        <div class="check-label">🚗 السيارة</div>
-        <div class="check-btns">
-          <button class="check-btn" id="btnCarMatch" onclick="setCheck(this, &quot;car&quot;, true)">✅ مطابقة</button>
-          <button class="check-btn" id="btnCarNo" onclick="setCheck(this, &quot;car&quot;, false)">❌ غير مطابقة</button>
-        </div>
-      </div>
+      <button class="btn-approve" id="approveBtn" onclick="approvePermit()">تسليم ← إرسال للبوابة</button>
     </div>
-    <button class="btn-approve" onclick="approvePermit()">تسليم ← إرسال للبوابة</button>
   </div>
 </div>
+
 <script>
-  const API = "https://mazoon1.abdulonline.online/webhook";
-  const staff = JSON.parse(localStorage.getItem("staff") || "null");
-  if (!staff || staff.role !== "supervisor") window.location.href = "../staff-login.html";
-  document.getElementById("navName").textContent = staff.full_name || "";
-  let currentPermit = null, personOk = null, carOk = null;
+  const API = 'https://mazoon1.abdulonline.online/webhook';
+  const staff = JSON.parse(localStorage.getItem('staff') || 'null');
+  if (!staff || staff.role !== 'supervisor') window.location.href = '/mazoon-permits/staff-login.html';
+  document.getElementById('navName').textContent = staff.full_name || '';
+
+  let permitsStore = {};
+  let currentPermitId = null, personOk = null, carOk = null;
 
   function showPage(e, page) {
-    document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-   if (!staff || staff.role !== "supervisor") window.location.href = "/mazoon-permits/staff-login.html";
-    document.getElementById("page-" + page).classList.add("active");
-    e.currentTarget.classList.add("active");
-    if (page === "permits") loadPermits();
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+    document.getElementById('page-' + page).classList.add('active');
+    e.currentTarget.classList.add('active');
+    if (page === 'permits') loadPermits();
+    if (page === 'archive') loadArchive();
   }
 
   async function verifyCard() {
-    const nid = document.getElementById("nidInput").value.trim();
-    const al = document.getElementById("readerAlert");
-    al.style.display = "none";
-    if (!nid) { showAlert(al, "يرجى إدخال الرقم المدني", "error"); return; }
+    const nid = document.getElementById('nidInput').value.trim();
+    const al = document.getElementById('readerAlert');
+    al.style.display = 'none';
+    if (!nid) { showAlert(al, 'يرجى إدخال الرقم المدني', 'error'); return; }
     try {
-      const res = await fetch(API + "/verify-card", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ national_id: nid }) });
+      const res = await fetch(API + '/verify-card', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ national_id: nid }) });
       const data = await res.json();
-      if (!data.success) { showAlert(al, data.message || "لا يوجد طلب مرتبط", "error"); return; }
-      showAlert(al, "✅ تم التحقق! جاري فتح التصريح...", "success");
-      openModal(data.permit);
-      document.getElementById("nidInput").value = "";
-    } catch { showAlert(al, "خطأ في الاتصال", "error"); }
+      if (!data.success) { showAlert(al, data.message || 'لا يوجد طلب جاهز لهذا الرقم', 'error'); return; }
+      showAlert(al, '✅ تم التحقق! جاري فتح التصريح...', 'success');
+      permitsStore[data.permit.permit_id] = data.permit;
+      openModalById(data.permit.permit_id);
+      document.getElementById('nidInput').value = '';
+    } catch { showAlert(al, 'خطأ في الاتصال', 'error'); }
   }
 
-  function openModal(p) {
-    currentPermit = p; personOk = null; carOk = null;
-    ["btnPersonMatch","btnPersonNo","btnCarMatch","btnCarNo"].forEach(id => document.getElementById(id).className = "check-btn");
-    document.getElementById("modalAlert").style.display = "none";
-    document.getElementById("actualExitTime").value = new Date().toTimeString().slice(0,5);
-    document.getElementById("permitInfo").innerHTML = [
-      ["اسم الطالبة",p.student_name],["الرقم الجامعي",p.student_number],
-      ["رقم الغرفة",p.room_number],["نوع التصريح",p.permit_type],
-      ["المصرح له",p.person_name],["صلة القرابة",p.relation],
-      ["الرقم المدني",p.person_national_id],["رقم لوحة السيارة",p.car_plate],
-      ["تاريخ المغادرة",p.exit_date],["وقت المغادرة",p.exit_time],
-      ["تاريخ العودة",p.return_date],["وقت العودة",p.return_time],
-    ].map(([l,v]) => "<div class=info-item><div class=info-label>"+l+"</div><div class=info-value>"+(v||"—")+"</div></div>").join("");
-    document.getElementById("modalOverlay").classList.add("open");
+  function openModalById(id) {
+    const p = permitsStore[id];
+    if (!p) return;
+    currentPermitId = id; personOk = null; carOk = null;
+    ['btnPersonMatch','btnPersonNo','btnCarMatch','btnCarNo'].forEach(bid => document.getElementById(bid).className = 'check-btn');
+    document.getElementById('modalAlert').style.display = 'none';
+    document.getElementById('actualExitTime').value = new Date().toTimeString().slice(0,5);
+
+    const isReady = p.status === 'car_entered';
+    document.getElementById('waitBanner').style.display = isReady ? 'none' : 'block';
+    document.getElementById('actionSection').style.display = isReady ? 'block' : 'none';
+
+    document.getElementById('permitInfo').innerHTML = [
+      ['اسم الطالبة', p.student_name], ['الرقم الجامعي', p.student_number],
+      ['رقم الغرفة', p.room_number], ['نوع التصريح', p.permit_type],
+      ['المصرح له', p.person_name], ['صلة القرابة', p.relation],
+      ['الرقم المدني', p.person_national_id], ['رقم لوحة السيارة', p.car_plate],
+      ['تاريخ المغادرة', p.exit_date], ['وقت المغادرة', p.exit_time],
+      ['تاريخ العودة', p.return_date], ['وقت العودة', p.return_time],
+    ].map(([l,v]) => '<div class="info-item"><div class="info-label">'+l+'</div><div class="info-value">'+(v||'—')+'</div></div>').join('');
+
+    document.getElementById('modalOverlay').classList.add('open');
   }
 
-  function closeModal() { document.getElementById("modalOverlay").classList.remove("open"); }
+  function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
 
-  function setCheck(btn, type, val) {
-    if (type === "person") {
+  function setCheck(type, val) {
+    if (type === 'person') {
       personOk = val;
-      document.getElementById("btnPersonMatch").className = "check-btn" + (val ? " match" : "");
-      document.getElementById("btnPersonNo").className = "check-btn" + (!val ? " no-match" : "");
+      document.getElementById('btnPersonMatch').className = 'check-btn' + (val ? ' match' : '');
+      document.getElementById('btnPersonNo').className = 'check-btn' + (!val ? ' no-match' : '');
     } else {
       carOk = val;
-      document.getElementById("btnCarMatch").className = "check-btn" + (val ? " match" : "");
-      document.getElementById("btnCarNo").className = "check-btn" + (!val ? " no-match" : "");
+      document.getElementById('btnCarMatch').className = 'check-btn' + (val ? ' match' : '');
+      document.getElementById('btnCarNo').className = 'check-btn' + (!val ? ' no-match' : '');
     }
   }
 
   async function approvePermit() {
-    const al = document.getElementById("modalAlert");
-    const exitTime = document.getElementById("actualExitTime").value;
-    if (personOk === null || carOk === null) { showAlert(al, "يرجى تحديد حالة المطابقة", "error"); return; }
-    if (!personOk || !carOk) { showAlert(al, "⚠️ لا يمكن التسليم — تم تسجيل عدم المطابقة", "error"); return; }
-    if (!exitTime) { showAlert(al, "يرجى إدخال وقت الخروج الفعلي", "error"); return; }
+    const al = document.getElementById('modalAlert');
+    const exitTime = document.getElementById('actualExitTime').value;
+    if (personOk === null || carOk === null) { showAlert(al, 'يرجى تحديد حالة المطابقة', 'error'); return; }
+    if (!personOk || !carOk) { showAlert(al, '⚠️ لا يمكن التسليم — تم تسجيل عدم المطابقة', 'error'); return; }
+    if (!exitTime) { showAlert(al, 'يرجى إدخال وقت الخروج الفعلي', 'error'); return; }
     try {
-      const res = await fetch(API + "/approve-permit", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ permit_id: currentPermit.permit_id, actual_exit_time: exitTime, supervisor_name: staff.full_name }) });
+      const res = await fetch(API + '/approve-permit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ permit_id: currentPermitId, actual_exit_time: exitTime, supervisor_name: staff.full_name }) });
       const data = await res.json();
       if (!data.success) throw new Error(data.message);
       closeModal(); loadPermits();
-    } catch(e) { showAlert(al, e.message, "error"); }
+    } catch(e) { showAlert(al, e.message, 'error'); }
   }
 
   async function loadPermits() {
-    const res = await fetch(API + "/get-permits-pending");
-    const data = await res.json();
-    const permits = data.data || [];
-    document.getElementById("pendingCount").textContent = permits.length;
-    document.getElementById("permitsList").innerHTML = permits.length ? "<div class=table-wrap><table><thead><tr><th>اسم الطالبة</th><th>الرقم الجامعي</th><th>المصرح له</th><th>نوع التصريح</th><th>تاريخ المغادرة</th><th>فتح</th></tr></thead><tbody>" + permits.map(p => "<tr><td>"+p.student_name+"</td><td>"+p.student_number+"</td><td>"+p.person_name+"</td><td>"+p.permit_type+"</td><td>"+p.exit_date+"</td><td><button class=btn-open onclick='openModal("+JSON.stringify(p).replace(/"/g,"&quot;")+")'>فتح</button></td></tr>").join("") + "</tbody></table></div>" : "<div class=empty>لا توجد تصاريح معلقة</div>";
+    document.getElementById('permitsList').innerHTML = '<div style="text-align:center;padding:30px"><div class="spin"></div></div>';
+    try {
+      const res = await fetch(API + '/get-permits-pending');
+      const data = await res.json();
+      const permits = data.data || [];
+      permits.forEach(p => permitsStore[p.permit_id] = p);
+      document.getElementById('pendingCount').textContent = permits.length;
+      const statusBadge = s => s === 'car_entered' ? '<span class="badge badge-entered">🚗 جاهز للمراجعة</span>' : '<span class="badge badge-pending">⏳ بانتظار الدخول</span>';
+      document.getElementById('permitsList').innerHTML = permits.length ? '<div class="table-wrap"><table><thead><tr><th>اسم الطالبة</th><th>الرقم الجامعي</th><th>المصرح له</th><th>نوع التصريح</th><th>الحالة</th><th>فتح</th></tr></thead><tbody>' +
+        permits.map(p => '<tr><td>'+p.student_name+'</td><td>'+p.student_number+'</td><td>'+p.person_name+'</td><td>'+p.permit_type+'</td><td>'+statusBadge(p.status)+'</td><td><button class="btn-open" onclick="openModalById(\''+p.permit_id+'\')">فتح</button></td></tr>').join('')
+        + '</tbody></table></div>' : '<div class="empty">لا توجد تصاريح حالياً</div>';
+    } catch { document.getElementById('permitsList').innerHTML = '<div class="empty">خطأ في تحميل البيانات</div>'; }
+  }
+
+  async function loadArchive() {
+    document.getElementById('archiveList').innerHTML = '<div style="text-align:center;padding:30px"><div class="spin"></div></div>';
+    try {
+      const res = await fetch(API + '/get-permits-archive');
+      const data = await res.json();
+      const permits = data.data || [];
+      document.getElementById('archiveList').innerHTML = permits.length ? '<div class="table-wrap"><table><thead><tr><th>اسم الطالبة</th><th>الرقم الجامعي</th><th>المصرح له</th><th>رقم السيارة</th><th>تاريخ المغادرة</th><th>الحالة</th></tr></thead><tbody>' +
+        permits.map(p => '<tr><td>'+p.student_name+'</td><td>'+p.student_number+'</td><td>'+p.person_name+'</td><td>'+p.car_plate+'</td><td>'+p.exit_date+'</td><td><span class="badge badge-exited">✅ تم الخروج</span></td></tr>').join('')
+        + '</tbody></table></div>' : '<div class="empty">لا توجد تصاريح مؤرشفة بعد</div>';
+    } catch { document.getElementById('archiveList').innerHTML = '<div class="empty">خطأ في تحميل الأرشيف</div>'; }
   }
 
   function showAlert(el, msg, type) {
-    el.textContent = msg; el.className = "alert alert-" + type; el.style.display = "block";
-    if (type === "success") setTimeout(() => el.style.display = "none", 3000);
+    el.textContent = msg; el.className = 'alert alert-' + type; el.style.display = 'block';
+    if (type === 'success') setTimeout(() => el.style.display = 'none', 3000);
   }
 
- function logout() { localStorage.clear(); window.location.href = "/mazoon-permits/staff-login.html"; }
-  document.getElementById("nidInput").addEventListener("keydown", e => { if (e.key === "Enter") verifyCard(); });
+  function logout() { localStorage.clear(); window.location.href = '/mazoon-permits/staff-login.html'; }
+  document.getElementById('nidInput').addEventListener('keydown', e => { if (e.key === 'Enter') verifyCard(); });
   loadPermits();
+  setInterval(loadPermits, 30000);
 </script>
 </body>
 </html>
