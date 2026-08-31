@@ -133,6 +133,7 @@
     </div>
     <div class="divider"></div>
     <div id="statusWrap"></div>
+    <div id="rejectBanner" class="wait-banner" style="display:none;background:#fef2f2;color:var(--red);border-color:#fecaca"></div>
     <div class="section-title">👩‍🎓 بيانات الطالبة</div>
     <div class="info-grid" id="studentInfo"></div>
     <div class="section-title">👤 بيانات المصرح له</div>
@@ -185,7 +186,8 @@
   const statusMap = {
     pending:      { label: '⏳ بانتظار دخول السيارة', cls: 'badge-pending' },
     car_entered:  { label: '🚗 دخلت — بانتظار المشرفة', cls: 'badge-entered' },
-    approved:     { label: '✅ معتمد — جاهز للخروج', cls: 'badge-approved' }
+    approved:     { label: '✅ معتمد — جاهز للخروج', cls: 'badge-approved' },
+    rejected:     { label: '🚫 مرفوض', cls: 'badge', style: 'background:#fef2f2;color:var(--red)' }
   };
   const returnStatusMap = {
     exited:              { label: '⏳ بانتظار دخول العودة', cls: 'badge-pending' },
@@ -223,12 +225,24 @@
     if (!p) return;
     currentPermitId = id;
     const s = p.status;
-    document.getElementById('statusWrap').innerHTML = '<span class="status-badge ' + (statusMap[s]?.cls || '') + '">' + (statusMap[s]?.label || s) + '</span>';
+    document.getElementById('statusWrap').innerHTML = '<span class="status-badge ' + (statusMap[s]?.cls || '') + '" style="' + (statusMap[s]?.style||'') + '">' + (statusMap[s]?.label || s) + '</span>';
+    const rejectBanner = document.getElementById('rejectBanner');
+    if (s === 'rejected') { rejectBanner.style.display = 'block'; rejectBanner.textContent = '🚫 تم رفض التصريح — السبب: ' + (p.rejection_reason || 'غير محدد') + '. الرجاء إخراج السيارة بدون الطالبة.'; }
+    else { rejectBanner.style.display = 'none'; }
     document.getElementById('studentInfo').innerHTML = infoBlock([['اسم الطالبة',p.student_name],['الرقم الجامعي',p.student_number],['رقم الغرفة',p.room_number],['نوع التصريح',p.permit_type]]);
     document.getElementById('personInfo').innerHTML = infoBlock([['اسم المصرح له',p.person_name],['الرقم المدني',p.person_national_id],['رقم الهاتف',p.person_phone||'—'],['صلة القرابة',p.relation]]);
     document.getElementById('carInfo').innerHTML = '<div class="info-item highlight"><div class="info-label">رقم لوحة السيارة 🚗</div><div class="info-value" style="font-size:18px;color:var(--purple)">'+(p.car_plate||'—')+'</div></div><div class="info-item"><div class="info-label">تاريخ المغادرة</div><div class="info-value">'+(p.exit_date||'—')+'</div></div><div class="info-item"><div class="info-label">وقت المغادرة</div><div class="info-value">'+(p.exit_time||'—')+'</div></div><div class="info-item"><div class="info-label">وقت العودة المحدد</div><div class="info-value">'+(p.return_time||'—')+'</div></div>';
     document.getElementById('btnEnter').disabled = (s !== 'pending');
-    document.getElementById('btnExit').disabled = (s !== 'approved');
+    const btnExit = document.getElementById('btnExit');
+    if (s === 'rejected') {
+      btnExit.textContent = '🚫 تم إخراج السيارة (بدون الطالبة)';
+      btnExit.disabled = false;
+      btnExit.onclick = confirmRejectedExit;
+    } else {
+      btnExit.textContent = '🚗 تم خروج الطالبة';
+      btnExit.disabled = (s !== 'approved');
+      btnExit.onclick = confirmExit;
+    }
     document.getElementById('modalOverlay').classList.add('open');
   }
   function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
@@ -246,6 +260,14 @@
       const data = await res.json();
       if (!data.success) throw new Error(data.message);
       closeModal(); loadPermits(); loadReturn();
+    } catch(e) { alert(e.message); }
+  }
+  async function confirmRejectedExit() {
+    try {
+      const res = await fetch(API + '/complete-permit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ permit_id: currentPermitId }) });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message);
+      closeModal(); loadPermits();
     } catch(e) { alert(e.message); }
   }
   async function loadPermits() {
@@ -319,8 +341,10 @@
       const res = await fetch(API + '/get-permits-archive');
       const data = await res.json();
       const permits = data.data || [];
-      document.getElementById('archiveList').innerHTML = permits.length ? '<div class="table-wrap"><table><thead><tr><th>اسم الطالبة</th><th>رقم السيارة</th><th>المصرح له</th><th>وقت العودة المحدد</th><th>وقت العودة الفعلي</th><th>التأخير</th></tr></thead><tbody>' +
-        permits.map(p => '<tr><td>'+p.student_name+'</td><td>'+p.car_plate+'</td><td>'+p.person_name+'</td><td>'+p.return_time+'</td><td>'+(p.actual_return_time||'—')+'</td><td>'+(p.actual_return_time ? computeDelay(p.return_time, p.actual_return_time) : '—')+'</td></tr>').join('')
+      document.getElementById('archiveList').innerHTML = permits.length ? '<div class="table-wrap"><table><thead><tr><th>اسم الطالبة</th><th>رقم السيارة</th><th>المصرح له</th><th>وقت العودة المحدد</th><th>وقت العودة الفعلي</th><th>الحالة</th></tr></thead><tbody>' +
+        permits.map(p => p.rejection_reason
+          ? '<tr><td>'+p.student_name+'</td><td>'+p.car_plate+'</td><td>'+p.person_name+'</td><td colspan="2"><span class="badge" style="background:#fef2f2;color:var(--red)">🚫 مرفوض — '+p.rejection_reason+'</span></td><td>—</td></tr>'
+          : '<tr><td>'+p.student_name+'</td><td>'+p.car_plate+'</td><td>'+p.person_name+'</td><td>'+p.return_time+'</td><td>'+(p.actual_return_time||'—')+'</td><td>'+(p.actual_return_time ? computeDelay(p.return_time, p.actual_return_time) : '✅ تم الخروج')+'</td></tr>').join('')
         + '</tbody></table></div>' : '<div class="empty">لا توجد تصاريح مؤرشفة بعد</div>';
     } catch { document.getElementById('archiveList').innerHTML = '<div class="empty">خطأ في تحميل الأرشيف</div>'; }
   }
