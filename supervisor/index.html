@@ -374,13 +374,18 @@
     if (rPersonOk === null || rCarOk === null) { showAlert(al, 'يرجى تحديد حالة المطابقة', 'error'); return; }
     const p = returnStore[currentReturnId];
     const mismatch = (!rPersonOk || !rCarOk);
+    let reason = '';
+    if (!rPersonOk && !rCarOk) reason = 'الشخص والسيارة غير مطابقين';
+    else if (!rPersonOk) reason = 'الشخص غير مطابق';
+    else if (!rCarOk) reason = 'السيارة غير مطابقة';
     try {
       const res = await fetch(API + '/return-approve', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
         permit_id: currentReturnId,
         student_name: p.student_name,
         student_number: p.student_number,
         person_mismatch: !rPersonOk,
-        car_mismatch: !rCarOk
+        car_mismatch: !rCarOk,
+        return_mismatch_reason: reason
       }) });
       const data = await res.json();
       if (!data.success) throw new Error(data.message);
@@ -411,9 +416,14 @@
       const data = await res.json();
       const permits = data.data || [];
       document.getElementById('archiveList').innerHTML = permits.length ? '<div class="table-wrap"><table><thead><tr><th>اسم الطالبة</th><th>الرقم الجامعي</th><th>المصرح له</th><th>رقم السيارة</th><th>وقت العودة المحدد</th><th>وقت العودة الفعلي</th><th>الحالة</th></tr></thead><tbody>' +
-        permits.map(p => p.rejection_reason
-          ? '<tr><td>'+p.student_name+'</td><td>'+p.student_number+'</td><td>'+p.person_name+'</td><td>'+p.car_plate+'</td><td colspan="2"><span class="badge" style="background:#fef2f2;color:var(--red)">🚫 مرفوض — '+p.rejection_reason+'</span></td><td>—</td></tr>'
-          : '<tr><td>'+p.student_name+'</td><td>'+p.student_number+'</td><td>'+p.person_name+'</td><td>'+p.car_plate+'</td><td>'+p.return_time+'</td><td>'+(p.actual_return_time||'—')+'</td><td>'+(p.actual_return_time ? computeDelay(p.return_time, p.actual_return_time) : '—')+'</td></tr>').join('')
+        permits.map(p => {
+          if (p.rejection_reason) return '<tr><td>'+p.student_name+'</td><td>'+p.student_number+'</td><td>'+p.person_name+'</td><td>'+p.car_plate+'</td><td colspan="2"><span class="badge" style="background:#fef2f2;color:var(--red)">🚫 مرفوض عند الخروج — '+p.rejection_reason+'</span></td><td>—</td></tr>';
+          const delay = p.actual_return_time ? computeDelay(p.return_time, p.actual_return_time) : '—';
+          const status = p.return_mismatch_reason
+            ? '<span class="badge" style="background:#fef9c3;color:var(--amber)">⚠️ سُمح بالدخول رغم عدم مطابقة — '+p.return_mismatch_reason+'</span>'
+            : '<span class="badge badge-exited">✅ مكتمل بدون ملاحظات</span>';
+          return '<tr><td>'+p.student_name+'</td><td>'+p.student_number+'</td><td>'+p.person_name+'</td><td>'+p.car_plate+'</td><td>'+p.return_time+'</td><td>'+(p.actual_return_time||'—')+'</td><td>'+status+' '+delay+'</td></tr>';
+        }).join('')
         + '</tbody></table></div>' : '<div class="empty">لا توجد تصاريح مؤرشفة بعد</div>';
     } catch { document.getElementById('archiveList').innerHTML = '<div class="empty">خطأ في تحميل الأرشيف</div>'; }
   }
