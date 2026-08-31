@@ -174,7 +174,7 @@
           </div>
         </div>
       </div>
-      <button class="btn-approve" onclick="approvePermit()">تسليم ← إرسال للبوابة</button>
+      <button class="btn-approve" id="approveBtn" onclick="handleApproveClick()">تسليم ← إرسال للبوابة</button>
     </div>
   </div>
 </div>
@@ -281,18 +281,47 @@
     document.getElementById('waitBanner').style.display = isReady ? 'none' : 'block';
     document.getElementById('actionSection').style.display = isReady ? 'block' : 'none';
     document.getElementById('permitInfo').innerHTML = infoGrid(p);
+    updateApproveButtonUI();
     document.getElementById('modalOverlay').classList.add('open');
   }
   function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
   function setCheck(type, val) {
     if (type === 'person') { personOk = val; document.getElementById('btnPersonMatch').className = 'check-btn' + (val?' match':''); document.getElementById('btnPersonNo').className = 'check-btn' + (!val?' no-match':''); }
     else { carOk = val; document.getElementById('btnCarMatch').className = 'check-btn' + (val?' match':''); document.getElementById('btnCarNo').className = 'check-btn' + (!val?' no-match':''); }
+    updateApproveButtonUI();
+  }
+  function updateApproveButtonUI() {
+    const btn = document.getElementById('approveBtn');
+    if (personOk === false || carOk === false) {
+      btn.textContent = '🚫 رفض التصريح ← إشعار البوابة';
+      btn.style.background = 'linear-gradient(135deg, #dc2626, #b91c1c)';
+    } else {
+      btn.textContent = 'تسليم ← إرسال للبوابة';
+      btn.style.background = '';
+    }
+  }
+  function handleApproveClick() {
+    if (personOk === false || carOk === false) rejectPermit();
+    else approvePermit();
+  }
+  async function rejectPermit() {
+    const al = document.getElementById('modalAlert');
+    if (personOk === null || carOk === null) { showAlert(al, 'يرجى تحديد حالة المطابقة', 'error'); return; }
+    let reason = '';
+    if (personOk === false && carOk === false) reason = 'الشخص والسيارة غير مطابقين';
+    else if (personOk === false) reason = 'الشخص غير مطابق';
+    else reason = 'السيارة غير مطابقة';
+    try {
+      const res = await fetch(API + '/reject-permit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ permit_id: currentPermitId, rejection_reason: reason }) });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message);
+      closeModal(); loadPermits();
+    } catch(e) { showAlert(al, e.message, 'error'); }
   }
   async function approvePermit() {
     const al = document.getElementById('modalAlert');
     const exitTime = document.getElementById('actualExitTime').value;
     if (personOk === null || carOk === null) { showAlert(al, 'يرجى تحديد حالة المطابقة', 'error'); return; }
-    if (!personOk || !carOk) { showAlert(al, '⚠️ لا يمكن التسليم — تم تسجيل عدم المطابقة', 'error'); return; }
     if (!exitTime) { showAlert(al, 'يرجى إدخال وقت الخروج الفعلي', 'error'); return; }
     try {
       const res = await fetch(API + '/approve-permit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ permit_id: currentPermitId, actual_exit_time: exitTime, supervisor_name: staff.full_name }) });
@@ -343,12 +372,20 @@
   async function approveReturn() {
     const al = document.getElementById('returnModalAlert');
     if (rPersonOk === null || rCarOk === null) { showAlert(al, 'يرجى تحديد حالة المطابقة', 'error'); return; }
-    if (!rPersonOk || !rCarOk) { showAlert(al, '⚠️ لا يمكن السماح بالدخول — تم تسجيل عدم المطابقة', 'error'); return; }
+    const p = returnStore[currentReturnId];
+    const mismatch = (!rPersonOk || !rCarOk);
     try {
-      const res = await fetch(API + '/return-approve', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ permit_id: currentReturnId }) });
+      const res = await fetch(API + '/return-approve', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+        permit_id: currentReturnId,
+        student_name: p.student_name,
+        student_number: p.student_number,
+        person_mismatch: !rPersonOk,
+        car_mismatch: !rCarOk
+      }) });
       const data = await res.json();
       if (!data.success) throw new Error(data.message);
       closeReturnModal(); loadReturn();
+      if (mismatch) alert('تم السماح للطالبة بالدخول — وتم إرسال إشعار لشؤون الطلاب بعدم المطابقة');
     } catch(e) { showAlert(al, e.message, 'error'); }
   }
   async function loadReturn() {
@@ -373,8 +410,10 @@
       const res = await fetch(API + '/get-permits-archive');
       const data = await res.json();
       const permits = data.data || [];
-      document.getElementById('archiveList').innerHTML = permits.length ? '<div class="table-wrap"><table><thead><tr><th>اسم الطالبة</th><th>الرقم الجامعي</th><th>المصرح له</th><th>رقم السيارة</th><th>وقت العودة المحدد</th><th>وقت العودة الفعلي</th><th>التأخير</th></tr></thead><tbody>' +
-        permits.map(p => '<tr><td>'+p.student_name+'</td><td>'+p.student_number+'</td><td>'+p.person_name+'</td><td>'+p.car_plate+'</td><td>'+p.return_time+'</td><td>'+(p.actual_return_time||'—')+'</td><td>'+(p.actual_return_time ? computeDelay(p.return_time, p.actual_return_time) : '—')+'</td></tr>').join('')
+      document.getElementById('archiveList').innerHTML = permits.length ? '<div class="table-wrap"><table><thead><tr><th>اسم الطالبة</th><th>الرقم الجامعي</th><th>المصرح له</th><th>رقم السيارة</th><th>وقت العودة المحدد</th><th>وقت العودة الفعلي</th><th>الحالة</th></tr></thead><tbody>' +
+        permits.map(p => p.rejection_reason
+          ? '<tr><td>'+p.student_name+'</td><td>'+p.student_number+'</td><td>'+p.person_name+'</td><td>'+p.car_plate+'</td><td colspan="2"><span class="badge" style="background:#fef2f2;color:var(--red)">🚫 مرفوض — '+p.rejection_reason+'</span></td><td>—</td></tr>'
+          : '<tr><td>'+p.student_name+'</td><td>'+p.student_number+'</td><td>'+p.person_name+'</td><td>'+p.car_plate+'</td><td>'+p.return_time+'</td><td>'+(p.actual_return_time||'—')+'</td><td>'+(p.actual_return_time ? computeDelay(p.return_time, p.actual_return_time) : '—')+'</td></tr>').join('')
         + '</tbody></table></div>' : '<div class="empty">لا توجد تصاريح مؤرشفة بعد</div>';
     } catch { document.getElementById('archiveList').innerHTML = '<div class="empty">خطأ في تحميل الأرشيف</div>'; }
   }
