@@ -158,6 +158,11 @@
     <div class="info-grid" id="permitInfo"></div>
     <div id="actionSection">
       <div class="field-wrap"><label>⏰ وقت الخروج الفعلي</label><input type="time" id="actualExitTime"></div>
+      <div class="field-wrap">
+        <label>🔑 رقم المشرفة (إجباري لإتمام الإجراء)</label>
+        <input type="text" id="exitSupervisorCode" placeholder="أدخلي رقمك الخاص" onblur="checkExitSupervisor()" onkeydown="if(event.key==='Enter')checkExitSupervisor()">
+        <div id="exitSupervisorFeedback" style="margin-top:6px;font-size:13px;font-weight:600"></div>
+      </div>
       <div class="check-grid">
         <div class="check-item">
           <div class="check-label">👤 المصرح له</div>
@@ -174,7 +179,7 @@
           </div>
         </div>
       </div>
-      <button class="btn-approve" id="approveBtn" onclick="handleApproveClick()">تسليم ← إرسال للبوابة</button>
+      <button class="btn-approve" id="approveBtn" onclick="handleApproveClick()" disabled>تسليم ← إرسال للبوابة</button>
     </div>
   </div>
 </div>
@@ -192,6 +197,11 @@
     <div class="info-grid" id="returnPermitInfo"></div>
     <div id="returnDelayBox" class="delay-box" style="display:none"></div>
     <div id="returnActionSection">
+      <div class="field-wrap">
+        <label>🔑 رقم المشرفة (إجباري لإتمام الإجراء)</label>
+        <input type="text" id="returnSupervisorCode" placeholder="أدخلي رقمك الخاص" onblur="checkReturnSupervisor()" onkeydown="if(event.key==='Enter')checkReturnSupervisor()">
+        <div id="returnSupervisorFeedback" style="margin-top:6px;font-size:13px;font-weight:600"></div>
+      </div>
       <div class="check-grid">
         <div class="check-item">
           <div class="check-label">👤 المصرح له</div>
@@ -208,7 +218,7 @@
           </div>
         </div>
       </div>
-      <button class="btn-approve" onclick="approveReturn()">السماح للطالبة بالدخول</button>
+      <button class="btn-approve" id="returnApproveBtn" onclick="approveReturn()" disabled>السماح للطالبة بالدخول</button>
     </div>
   </div>
 </div>
@@ -222,6 +232,57 @@
   let permitsStore = {}, returnStore = {};
   let currentPermitId = null, personOk = null, carOk = null;
   let currentReturnId = null, rPersonOk = null, rCarOk = null;
+  let exitSupervisorVerified = false, exitSupervisorName = '';
+  let returnSupervisorVerified = false, returnSupervisorName = '';
+
+  async function checkExitSupervisor() {
+    const code = document.getElementById('exitSupervisorCode').value.trim();
+    const fb = document.getElementById('exitSupervisorFeedback');
+    if (!code) { fb.innerHTML = ''; exitSupervisorVerified = false; exitSupervisorName = ''; updateExitButtonState(); return; }
+    try {
+      const res = await fetch(API + '/verify-supervisor?code=' + encodeURIComponent(code));
+      const data = await res.json();
+      if (data.success) {
+        fb.innerHTML = '<span style="color:var(--green)">✅ ' + data.name + '</span>';
+        exitSupervisorVerified = true; exitSupervisorName = data.name;
+      } else {
+        fb.innerHTML = '<span style="color:var(--red)">❌ رقم غير صحيح</span>';
+        exitSupervisorVerified = false; exitSupervisorName = '';
+      }
+    } catch {
+      fb.innerHTML = '<span style="color:var(--red)">❌ خطأ في التحقق</span>';
+      exitSupervisorVerified = false; exitSupervisorName = '';
+    }
+    updateExitButtonState();
+  }
+
+  async function checkReturnSupervisor() {
+    const code = document.getElementById('returnSupervisorCode').value.trim();
+    const fb = document.getElementById('returnSupervisorFeedback');
+    if (!code) { fb.innerHTML = ''; returnSupervisorVerified = false; returnSupervisorName = ''; updateReturnButtonState(); return; }
+    try {
+      const res = await fetch(API + '/verify-supervisor?code=' + encodeURIComponent(code));
+      const data = await res.json();
+      if (data.success) {
+        fb.innerHTML = '<span style="color:var(--green)">✅ ' + data.name + '</span>';
+        returnSupervisorVerified = true; returnSupervisorName = data.name;
+      } else {
+        fb.innerHTML = '<span style="color:var(--red)">❌ رقم غير صحيح</span>';
+        returnSupervisorVerified = false; returnSupervisorName = '';
+      }
+    } catch {
+      fb.innerHTML = '<span style="color:var(--red)">❌ خطأ في التحقق</span>';
+      returnSupervisorVerified = false; returnSupervisorName = '';
+    }
+    updateReturnButtonState();
+  }
+
+  function updateExitButtonState() {
+    document.getElementById('approveBtn').disabled = !(personOk !== null && carOk !== null && exitSupervisorVerified);
+  }
+  function updateReturnButtonState() {
+    document.getElementById('returnApproveBtn').disabled = !(rPersonOk !== null && rCarOk !== null && returnSupervisorVerified);
+  }
 
   function computeDelay(expected, actual) {
     if (!expected || !actual) return '';
@@ -274,6 +335,9 @@
     const p = permitsStore[id];
     if (!p) return;
     currentPermitId = id; personOk = null; carOk = null;
+    exitSupervisorVerified = false; exitSupervisorName = '';
+    document.getElementById('exitSupervisorCode').value = '';
+    document.getElementById('exitSupervisorFeedback').innerHTML = '';
     ['btnPersonMatch','btnPersonNo','btnCarMatch','btnCarNo'].forEach(bid => document.getElementById(bid).className = 'check-btn');
     document.getElementById('modalAlert').style.display = 'none';
     document.getElementById('actualExitTime').value = new Date().toTimeString().slice(0,5);
@@ -282,6 +346,7 @@
     document.getElementById('actionSection').style.display = isReady ? 'block' : 'none';
     document.getElementById('permitInfo').innerHTML = infoGrid(p);
     updateApproveButtonUI();
+    updateExitButtonState();
     document.getElementById('modalOverlay').classList.add('open');
   }
   function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
@@ -289,6 +354,7 @@
     if (type === 'person') { personOk = val; document.getElementById('btnPersonMatch').className = 'check-btn' + (val?' match':''); document.getElementById('btnPersonNo').className = 'check-btn' + (!val?' no-match':''); }
     else { carOk = val; document.getElementById('btnCarMatch').className = 'check-btn' + (val?' match':''); document.getElementById('btnCarNo').className = 'check-btn' + (!val?' no-match':''); }
     updateApproveButtonUI();
+    updateExitButtonState();
   }
   function updateApproveButtonUI() {
     const btn = document.getElementById('approveBtn');
@@ -307,12 +373,13 @@
   async function rejectPermit() {
     const al = document.getElementById('modalAlert');
     if (personOk === null || carOk === null) { showAlert(al, 'يرجى تحديد حالة المطابقة', 'error'); return; }
+    if (!exitSupervisorVerified) { showAlert(al, 'يرجى إدخال رقم المشرفة الصحيح', 'error'); return; }
     let reason = '';
     if (personOk === false && carOk === false) reason = 'الشخص والسيارة غير مطابقين';
     else if (personOk === false) reason = 'الشخص غير مطابق';
     else reason = 'السيارة غير مطابقة';
     try {
-      const res = await fetch(API + '/reject-permit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ permit_id: currentPermitId, rejection_reason: reason }) });
+      const res = await fetch(API + '/reject-permit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ permit_id: currentPermitId, rejection_reason: reason, supervisor_name: exitSupervisorName }) });
       const data = await res.json();
       if (!data.success) throw new Error(data.message);
       closeModal(); loadPermits();
@@ -322,9 +389,10 @@
     const al = document.getElementById('modalAlert');
     const exitTime = document.getElementById('actualExitTime').value;
     if (personOk === null || carOk === null) { showAlert(al, 'يرجى تحديد حالة المطابقة', 'error'); return; }
+    if (!exitSupervisorVerified) { showAlert(al, 'يرجى إدخال رقم المشرفة الصحيح', 'error'); return; }
     if (!exitTime) { showAlert(al, 'يرجى إدخال وقت الخروج الفعلي', 'error'); return; }
     try {
-      const res = await fetch(API + '/approve-permit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ permit_id: currentPermitId, actual_exit_time: exitTime, supervisor_name: staff.full_name }) });
+      const res = await fetch(API + '/approve-permit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ permit_id: currentPermitId, actual_exit_time: exitTime, supervisor_name: exitSupervisorName }) });
       const data = await res.json();
       if (!data.success) throw new Error(data.message);
       closeModal(); loadPermits();
@@ -350,6 +418,9 @@
     const p = returnStore[id];
     if (!p) return;
     currentReturnId = id; rPersonOk = null; rCarOk = null;
+    returnSupervisorVerified = false; returnSupervisorName = '';
+    document.getElementById('returnSupervisorCode').value = '';
+    document.getElementById('returnSupervisorFeedback').innerHTML = '';
     ['rBtnPersonMatch','rBtnPersonNo','rBtnCarMatch','rBtnCarNo'].forEach(bid => document.getElementById(bid).className = 'check-btn');
     document.getElementById('returnModalAlert').style.display = 'none';
     const banner = document.getElementById('returnWaitBanner');
@@ -362,16 +433,19 @@
     if (p.actual_return_time) { delayBox.style.display = 'block'; delayBox.innerHTML = '⏰ وقت العودة الفعلي: ' + p.actual_return_time + ' — ' + computeDelay(p.return_time, p.actual_return_time); }
     else { delayBox.style.display = 'none'; }
     document.getElementById('returnPermitInfo').innerHTML = infoGrid(p);
+    updateReturnButtonState();
     document.getElementById('returnModalOverlay').classList.add('open');
   }
   function closeReturnModal() { document.getElementById('returnModalOverlay').classList.remove('open'); }
   function setReturnCheck(type, val) {
     if (type === 'person') { rPersonOk = val; document.getElementById('rBtnPersonMatch').className = 'check-btn' + (val?' match':''); document.getElementById('rBtnPersonNo').className = 'check-btn' + (!val?' no-match':''); }
     else { rCarOk = val; document.getElementById('rBtnCarMatch').className = 'check-btn' + (val?' match':''); document.getElementById('rBtnCarNo').className = 'check-btn' + (!val?' no-match':''); }
+    updateReturnButtonState();
   }
   async function approveReturn() {
     const al = document.getElementById('returnModalAlert');
     if (rPersonOk === null || rCarOk === null) { showAlert(al, 'يرجى تحديد حالة المطابقة', 'error'); return; }
+    if (!returnSupervisorVerified) { showAlert(al, 'يرجى إدخال رقم المشرفة الصحيح', 'error'); return; }
     const p = returnStore[currentReturnId];
     const mismatch = (!rPersonOk || !rCarOk);
     let reason = '';
@@ -385,7 +459,8 @@
         student_number: p.student_number,
         person_mismatch: !rPersonOk,
         car_mismatch: !rCarOk,
-        return_mismatch_reason: reason
+        return_mismatch_reason: reason,
+        supervisor_name: returnSupervisorName
       }) });
       const data = await res.json();
       if (!data.success) throw new Error(data.message);
@@ -415,14 +490,14 @@
       const res = await fetch(API + '/get-permits-archive');
       const data = await res.json();
       const permits = data.data || [];
-      document.getElementById('archiveList').innerHTML = permits.length ? '<div class="table-wrap"><table><thead><tr><th>اسم الطالبة</th><th>الرقم الجامعي</th><th>المصرح له</th><th>رقم السيارة</th><th>وقت العودة المحدد</th><th>وقت العودة الفعلي</th><th>الحالة</th></tr></thead><tbody>' +
+      document.getElementById('archiveList').innerHTML = permits.length ? '<div class="table-wrap"><table><thead><tr><th>اسم الطالبة</th><th>الرقم الجامعي</th><th>المصرح له</th><th>رقم السيارة</th><th>مشرفة الخروج</th><th>مشرفة الدخول</th><th>الحالة</th></tr></thead><tbody>' +
         permits.map(p => {
-          if (p.rejection_reason) return '<tr><td>'+p.student_name+'</td><td>'+p.student_number+'</td><td>'+p.person_name+'</td><td>'+p.car_plate+'</td><td colspan="2"><span class="badge" style="background:#fef2f2;color:var(--red)">🚫 مرفوض عند الخروج — '+p.rejection_reason+'</span></td><td>—</td></tr>';
+          if (p.rejection_reason) return '<tr><td>'+p.student_name+'</td><td>'+p.student_number+'</td><td>'+p.person_name+'</td><td>'+p.car_plate+'</td><td>'+(p.exit_supervisor_name||'—')+'</td><td>—</td><td><span class="badge" style="background:#fef2f2;color:var(--red)">🚫 مرفوض عند الخروج — '+p.rejection_reason+'</span></td></tr>';
           const delay = p.actual_return_time ? computeDelay(p.return_time, p.actual_return_time) : '—';
           const status = p.return_mismatch_reason
             ? '<span class="badge" style="background:#fef9c3;color:var(--amber)">⚠️ سُمح بالدخول رغم عدم مطابقة — '+p.return_mismatch_reason+'</span>'
             : '<span class="badge badge-exited">✅ مكتمل بدون ملاحظات</span>';
-          return '<tr><td>'+p.student_name+'</td><td>'+p.student_number+'</td><td>'+p.person_name+'</td><td>'+p.car_plate+'</td><td>'+p.return_time+'</td><td>'+(p.actual_return_time||'—')+'</td><td>'+status+' '+delay+'</td></tr>';
+          return '<tr><td>'+p.student_name+'</td><td>'+p.student_number+'</td><td>'+p.person_name+'</td><td>'+p.car_plate+'</td><td>'+(p.exit_supervisor_name||'—')+'</td><td>'+(p.return_supervisor_name||'—')+'</td><td>'+status+' '+delay+'</td></tr>';
         }).join('')
         + '</tbody></table></div>' : '<div class="empty">لا توجد تصاريح مؤرشفة بعد</div>';
     } catch { document.getElementById('archiveList').innerHTML = '<div class="empty">خطأ في تحميل الأرشيف</div>'; }
