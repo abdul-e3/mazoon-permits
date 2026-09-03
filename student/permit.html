@@ -16,6 +16,8 @@
       --dark:   #1a1a2e;
       --gray:   #6b7280;
       --border: #e2d9f3;
+      --green:  #16a34a;
+      --red:    #dc2626;
     }
     body { font-family: 'Tajawal', sans-serif; min-height: 100vh; background: linear-gradient(135deg, var(--blue) 0%, var(--purple) 60%, var(--pink) 100%); }
     nav {
@@ -88,18 +90,30 @@
     .btn-submit:active { transform: scale(0.99); }
     .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
 
-    .alert { padding: 14px 18px; border-radius: 12px; font-size: 14px; margin-bottom: 20px; display: none; }
-    .alert-success { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
-    .alert-error   { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+    .btn-cancel-edit {
+      width: 100%; padding: 13px;
+      background: var(--light); color: var(--gray); border: 2px solid var(--border); border-radius: 14px;
+      font-family: 'Tajawal', sans-serif; font-size: 15px; font-weight: 700;
+      cursor: pointer; margin-top: 10px;
+    }
 
-    .success-state { text-align: center; padding: 20px 0; display: none; }
-    .success-icon { font-size: 64px; margin-bottom: 16px; }
-    .success-state h3 { font-size: 22px; font-weight: 800; color: var(--dark); margin-bottom: 8px; }
-    .success-state p { font-size: 15px; color: var(--gray); margin-bottom: 24px; }
-    .btn-new { padding: 12px 28px; background: linear-gradient(135deg, var(--blue), var(--purple)); color: white; border: none; border-radius: 12px; font-family: 'Tajawal', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; }
+    .alert { padding: 14px 18px; border-radius: 12px; font-size: 14px; margin-bottom: 20px; display: none; }
+    .alert-success { background: #f0fdf4; color: var(--green); border: 1px solid #bbf7d0; }
+    .alert-error   { background: #fef2f2; color: var(--red); border: 1px solid #fecaca; }
 
     .spin { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.4); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-left: 6px; }
     @keyframes spin { to { transform: rotate(360deg); } }
+    .spin-dark { border: 3px solid var(--border); border-top-color: var(--purple); width: 28px; height: 28px; }
+
+    /* CURRENT PERMIT VIEW */
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px; }
+    .info-item { background: var(--light); border-radius: 10px; padding: 12px 16px; }
+    .info-label { font-size: 12px; color: var(--gray); margin-bottom: 4px; }
+    .info-value { font-size: 15px; font-weight: 600; color: var(--dark); }
+    .status-note { background: #fef9c3; color: #854d0e; border: 1px solid #fde68a; padding: 12px 16px; border-radius: 10px; font-size: 14px; margin-bottom: 20px; text-align: center; }
+    .action-btns { display: flex; gap: 12px; }
+    .btn-edit { flex: 1; padding: 14px; background: linear-gradient(135deg, var(--blue), var(--purple)); color: white; border: none; border-radius: 12px; font-family: 'Tajawal', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; }
+    .btn-delete { flex: 1; padding: 14px; background: #fef2f2; color: var(--red); border: 2px solid #fecaca; border-radius: 12px; font-family: 'Tajawal', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -111,23 +125,37 @@
   </div>
   <div class="nav-user">
     <span id="navName">...</span>
+    <button class="btn-logout" onclick="logout()">تسجيل خروج</button>
   </div>
 </nav>
 
 <div class="main">
   <div class="card">
-    <div class="card-title">طلب تصريح خروج</div>
-    <div class="card-sub">تعبئة النموذج بالبيانات المطلوبة لتقديم طلب التصريح</div>
-    <div class="divider"></div>
 
-    <div class="success-state" id="successState">
-      <div class="success-icon">✅</div>
-      <h3>تم تقديم الطلب بنجاح!</h3>
-      <p>تم إرسال إشعار لولي أمرك بتفاصيل التصريح.<br>يرجى الانتظار حتى تتم الموافقة من المشرفة.</p>
-      <button class="btn-new" onclick="logout()">تسجيل خروج</button>
+    <!-- LOADING -->
+    <div id="loadingState" style="text-align:center;padding:30px">
+      <div class="spin spin-dark"></div>
     </div>
 
-    <div id="permitForm">
+    <!-- CURRENT PERMIT VIEW -->
+    <div id="currentPermitView" style="display:none">
+      <div class="card-title">طلب التصريح الحالي</div>
+      <div class="card-sub">طلبك قيد المراجعة حالياً — يمكنك تعديله أو حذفه قبل بدء الإجراءات</div>
+      <div class="divider"></div>
+      <div class="status-note">⏳ الطلب قيد المراجعة — بانتظار وصول المصرح له للبوابة</div>
+      <div class="info-grid" id="currentPermitInfo"></div>
+      <div class="action-btns">
+        <button class="btn-edit" onclick="startEdit()">✏️ تعديل الطلب</button>
+        <button class="btn-delete" onclick="deleteCurrentPermit()">🗑️ حذف الطلب</button>
+      </div>
+    </div>
+
+    <!-- FORM (used for both new & edit) -->
+    <div id="formView" style="display:none">
+      <div class="card-title" id="formTitle">طلب تصريح خروج</div>
+      <div class="card-sub" id="formSub">تعبئة النموذج بالبيانات المطلوبة لتقديم طلب التصريح</div>
+      <div class="divider"></div>
+
       <div class="alert" id="alertMsg"></div>
       <div class="form-grid">
 
@@ -171,6 +199,7 @@
 
       </div>
       <button class="btn-submit" id="submitBtn" onclick="submitPermit()">تقديم الطلب</button>
+      <button class="btn-cancel-edit" id="cancelEditBtn" style="display:none" onclick="cancelEdit()">إلغاء والرجوع</button>
     </div>
 
   </div>
@@ -186,18 +215,17 @@
   const now = new Date();
   const pad = n => String(n).padStart(2, '0');
   const todayStr = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate());
-  const nowTimeStr = pad(now.getHours()) + ':' + pad(now.getMinutes());
 
   const exitDateEl = document.getElementById('exitDate');
   const exitTimeEl = document.getElementById('exitTime');
   const returnDateEl = document.getElementById('returnDate');
   const returnTimeEl = document.getElementById('returnTime');
 
-  exitDateEl.value = todayStr;
-  exitDateEl.min = todayStr;
-  returnDateEl.value = todayStr;
-  returnDateEl.min = todayStr;
+  let mode = 'new'; // 'new' | 'edit'
+  let currentPermitData = null;
 
+  exitDateEl.min = todayStr;
+  returnDateEl.min = todayStr;
   exitDateEl.addEventListener('change', () => {
     if (exitDateEl.value < todayStr) exitDateEl.value = todayStr;
     returnDateEl.min = exitDateEl.value;
@@ -207,7 +235,13 @@
     if (returnDateEl.value < exitDateEl.value) returnDateEl.value = exitDateEl.value;
   });
 
-  function auth() { return { 'Content-Type': 'application/json' }; }
+  function showState(name) {
+    document.getElementById('loadingState').style.display = name === 'loading' ? 'block' : 'none';
+    document.getElementById('currentPermitView').style.display = name === 'view' ? 'block' : 'none';
+    document.getElementById('formView').style.display = name === 'form' ? 'block' : 'none';
+  }
+
+  function logout() { localStorage.clear(); window.location.href = 'index.html'; }
 
   function selectType(type) {
     document.getElementById('permitType').value = type;
@@ -215,9 +249,43 @@
     document.getElementById('typeOver').classList.toggle('selected', type === 'مبيت');
   }
 
-  function logout() { localStorage.clear(); window.location.href = 'index.html'; }
+  async function checkMyPermit() {
+    showState('loading');
+    try {
+      const res = await fetch(API + '/get-my-permit?student_number=' + student.student_number);
+      const data = await res.json();
+      if (data.hasPermit) {
+        currentPermitData = data.permit;
+        renderCurrentPermit(data.permit);
+        showState('view');
+      } else {
+        currentPermitData = null;
+        mode = 'new';
+        prepareNewForm();
+        showState('form');
+      }
+    } catch(e) {
+      currentPermitData = null;
+      mode = 'new';
+      prepareNewForm();
+      showState('form');
+    }
+  }
 
-  async function loadPersons() {
+  function renderCurrentPermit(p) {
+    document.getElementById('currentPermitInfo').innerHTML = [
+      ['نوع التصريح', p.permit_type],
+      ['المصرح له', p.person_name],
+      ['صلة القرابة', p.relation],
+      ['رقم لوحة السيارة', p.car_plate],
+      ['تاريخ المغادرة', p.exit_date],
+      ['وقت المغادرة', p.exit_time],
+      ['تاريخ العودة', p.return_date],
+      ['وقت العودة', p.return_time],
+    ].map(([l,v]) => '<div class="info-item"><div class="info-label">'+l+'</div><div class="info-value">'+(v||'—')+'</div></div>').join('');
+  }
+
+  async function loadPersons(preselectNationalId) {
     try {
       const res = await fetch(API + '/get-authorized?student_number=' + student.student_number);
       const data = await res.json();
@@ -225,7 +293,58 @@
       if (!data.success || !data.data.length) { sel.innerHTML = '<option value="">لا يوجد مصرح لهم مسجلون</option>'; return; }
       sel.innerHTML = '<option value="">اختري الشخص المصرح له</option>' +
         data.data.map(a => '<option value=\'' + JSON.stringify(a).replace(/'/g,'&apos;') + '\'>' + a.full_name + ' — ' + a.relation + '</option>').join('');
+      if (preselectNationalId) {
+        [...sel.options].forEach(o => {
+          if (!o.value) return;
+          try {
+            const obj = JSON.parse(o.value.replace(/&apos;/g,"'"));
+            if (String(obj.national_id) === String(preselectNationalId)) o.selected = true;
+          } catch(e) {}
+        });
+      }
     } catch(e) { console.error(e); }
+  }
+
+  function prepareNewForm() {
+    document.getElementById('formTitle').textContent = 'طلب تصريح خروج';
+    document.getElementById('formSub').textContent = 'تعبئة النموذج بالبيانات المطلوبة لتقديم طلب التصريح';
+    document.getElementById('submitBtn').textContent = 'تقديم الطلب';
+    document.getElementById('submitBtn').disabled = false;
+    document.getElementById('cancelEditBtn').style.display = 'none';
+    document.getElementById('alertMsg').style.display = 'none';
+    selectType('مؤقت');
+    exitDateEl.value = todayStr;
+    returnDateEl.value = todayStr;
+    returnDateEl.min = todayStr;
+    exitTimeEl.value = '';
+    returnTimeEl.value = '';
+    document.getElementById('carPlate').value = '';
+    loadPersons();
+  }
+
+  function startEdit() {
+    mode = 'edit';
+    const p = currentPermitData;
+    document.getElementById('formTitle').textContent = 'تعديل طلب التصريح';
+    document.getElementById('formSub').textContent = 'عدّلي أي بيانات تريدينها ثم احفظي التعديلات';
+    document.getElementById('submitBtn').textContent = 'حفظ التعديلات';
+    document.getElementById('submitBtn').disabled = false;
+    document.getElementById('cancelEditBtn').style.display = 'block';
+    document.getElementById('alertMsg').style.display = 'none';
+    selectType(p.permit_type || 'مؤقت');
+    exitDateEl.value = p.exit_date || todayStr;
+    exitTimeEl.value = p.exit_time || '';
+    returnDateEl.min = exitDateEl.value;
+    returnDateEl.value = p.return_date || todayStr;
+    returnTimeEl.value = p.return_time || '';
+    document.getElementById('carPlate').value = p.car_plate || '';
+    loadPersons(p.person_national_id);
+    showState('form');
+  }
+
+  function cancelEdit() {
+    mode = 'new';
+    checkMyPermit();
   }
 
   function toDateTime(dateStr, timeStr) {
@@ -234,11 +353,11 @@
 
   async function submitPermit() {
     const personVal = document.getElementById('permitPerson').value;
-    const alert = document.getElementById('alertMsg');
-    alert.style.display = 'none';
+    const alertEl = document.getElementById('alertMsg');
+    alertEl.style.display = 'none';
 
-    if (!personVal) { showAlert(alert, 'يرجى اختيار المصرح له', 'error'); return; }
-    const person = JSON.parse(personVal);
+    if (!personVal) { showAlert(alertEl, 'يرجى اختيار المصرح له', 'error'); return; }
+    const person = JSON.parse(personVal.replace(/&apos;/g,"'"));
 
     const body = {
       student_number: student.student_number,
@@ -257,7 +376,7 @@
     };
 
     if (!body.exit_date || !body.exit_time || !body.return_date || !body.return_time || !body.car_plate) {
-      showAlert(alert, 'يرجى تعبئة جميع الحقول', 'error');
+      showAlert(alertEl, 'يرجى تعبئة جميع الحقول', 'error');
       return;
     }
 
@@ -266,43 +385,47 @@
     const nowCheck = new Date();
 
     if (exitDT.getTime() < nowCheck.getTime()) {
-      showAlert(alert, '⚠️ لا يمكن اختيار تاريخ أو وقت مغادرة مضى — يرجى اختيار وقت لاحق للوقت الحالي', 'error');
+      showAlert(alertEl, '⚠️ لا يمكن اختيار تاريخ أو وقت مغادرة مضى — يرجى اختيار وقت لاحق للوقت الحالي', 'error');
       return;
     }
     if (returnDT.getTime() <= exitDT.getTime()) {
-      showAlert(alert, '⚠️ يجب أن يكون تاريخ ووقت العودة بعد تاريخ ووقت المغادرة', 'error');
+      showAlert(alertEl, '⚠️ يجب أن يكون تاريخ ووقت العودة بعد تاريخ ووقت المغادرة', 'error');
       return;
     }
 
     const btn = document.getElementById('submitBtn');
     btn.disabled = true;
+    const originalLabel = mode === 'edit' ? 'حفظ التعديلات' : 'تقديم الطلب';
     btn.innerHTML = 'جاري الإرسال <span class="spin"></span>';
 
     try {
-      const res = await fetch(API + '/submit-permit', { method: 'POST', headers: auth(), body: JSON.stringify(body) });
-      const data = await res.json();
-      if (!data.success) throw new Error(data.message);
-      document.getElementById('permitForm').style.display = 'none';
-      document.getElementById('successState').style.display = 'block';
+      if (mode === 'edit') {
+        body.permit_id = currentPermitData.permit_id;
+        const res = await fetch(API + '/update-permit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message);
+      } else {
+        const res = await fetch(API + '/submit-permit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message);
+      }
+      checkMyPermit();
     } catch(e) {
-      showAlert(alert, e.message, 'error');
+      showAlert(alertEl, e.message, 'error');
       btn.disabled = false;
-      btn.innerHTML = 'تقديم الطلب';
+      btn.innerHTML = originalLabel;
     }
   }
 
-  function resetForm() {
-    document.getElementById('permitForm').style.display = 'block';
-    document.getElementById('successState').style.display = 'none';
-    document.getElementById('carPlate').value = '';
-    exitTimeEl.value = '';
-    returnTimeEl.value = '';
-    exitDateEl.value = todayStr;
-    returnDateEl.value = todayStr;
-    returnDateEl.min = todayStr;
-    document.getElementById('submitBtn').disabled = false;
-    document.getElementById('submitBtn').innerHTML = 'تقديم الطلب';
-    document.getElementById('alertMsg').style.display = 'none';
+  async function deleteCurrentPermit() {
+    if (!currentPermitData) return;
+    if (!confirm('هل أنت متأكدة من حذف الطلب؟ لا يمكن التراجع عن هذا الإجراء.')) return;
+    try {
+      const res = await fetch(API + '/delete-permit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ permit_id: currentPermitData.permit_id }) });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message);
+      checkMyPermit();
+    } catch(e) { alert(e.message); }
   }
 
   function showAlert(el, msg, type) {
@@ -312,7 +435,7 @@
     setTimeout(() => el.style.display = 'none', 5000);
   }
 
-  loadPersons();
+  checkMyPermit();
 </script>
 </body>
 </html>
