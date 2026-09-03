@@ -341,14 +341,14 @@
       const res = await fetch(API + '/get-permits-archive');
       const data = await res.json();
       const permits = data.data || [];
-      document.getElementById('archiveList').innerHTML = permits.length ? '<div class="table-wrap"><table><thead><tr><th>اسم الطالبة</th><th>رقم السيارة</th><th>المصرح له</th><th>وقت العودة المحدد</th><th>وقت العودة الفعلي</th><th>الحالة</th></tr></thead><tbody>' +
+      document.getElementById('archiveList').innerHTML = permits.length ? '<div class="table-wrap"><table><thead><tr><th>اسم الطالبة</th><th>رقم السيارة</th><th>المصرح له</th><th>مشرفة الخروج</th><th>مشرفة الدخول</th><th>الحالة</th></tr></thead><tbody>' +
         permits.map(p => {
-          if (p.rejection_reason) return '<tr><td>'+p.student_name+'</td><td>'+p.car_plate+'</td><td>'+p.person_name+'</td><td colspan="2"><span class="badge" style="background:#fef2f2;color:var(--red)">🚫 مرفوض عند الخروج — '+p.rejection_reason+'</span></td><td>—</td></tr>';
+          if (p.rejection_reason) return '<tr><td>'+p.student_name+'</td><td>'+p.car_plate+'</td><td>'+p.person_name+'</td><td>'+(p.exit_supervisor_name||'—')+'</td><td>—</td><td><span class="badge" style="background:#fef2f2;color:var(--red)">🚫 مرفوض عند الخروج — '+p.rejection_reason+'</span></td></tr>';
           const delay = p.actual_return_time ? computeDelay(p.return_time, p.actual_return_time) : '✅ تم الخروج';
           const status = p.return_mismatch_reason
             ? '<span class="badge" style="background:#fef9c3;color:var(--amber)">⚠️ عدم مطابقة — '+p.return_mismatch_reason+'</span>'
             : delay;
-          return '<tr><td>'+p.student_name+'</td><td>'+p.car_plate+'</td><td>'+p.person_name+'</td><td>'+p.return_time+'</td><td>'+(p.actual_return_time||'—')+'</td><td>'+status+'</td></tr>';
+          return '<tr><td>'+p.student_name+'</td><td>'+p.car_plate+'</td><td>'+p.person_name+'</td><td>'+(p.exit_supervisor_name||'—')+'</td><td>'+(p.return_supervisor_name||'—')+'</td><td>'+status+'</td></tr>';
         }).join('')
         + '</tbody></table></div>' : '<div class="empty">لا توجد تصاريح مؤرشفة بعد</div>';
     } catch { document.getElementById('archiveList').innerHTML = '<div class="empty">خطأ في تحميل الأرشيف</div>'; }
