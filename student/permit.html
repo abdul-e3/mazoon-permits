@@ -252,7 +252,7 @@
   async function checkMyPermit() {
     showState('loading');
     try {
-      const res = await fetch(API + '/get-my-permit?student_number=' + student.student_number);
+      const res = await fetch(API + '/get-my-permit?student_number=' + student.student_number + '&_=' + Date.now(), { cache: 'no-store' });
       const data = await res.json();
       if (data.hasPermit) {
         currentPermitData = data.permit;
