@@ -228,6 +228,19 @@
   </div>
 </div>
 
+<!-- ARCHIVE DETAIL MODAL -->
+<div class="modal-overlay" id="archiveModalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">تفاصيل الطلب المؤرشف</div>
+      <button class="btn-close" onclick="closeArchiveModal()">✕</button>
+    </div>
+    <div class="divider"></div>
+    <div id="archiveModalBanner"></div>
+    <div class="info-grid" id="archiveModalInfo"></div>
+  </div>
+</div>
+
 <script>
   const API = 'https://mazoon1.abdulonline.online/webhook';
   const staff = JSON.parse(localStorage.getItem('staff') || 'null');
@@ -490,12 +503,14 @@
 
   /* ===== ARCHIVE ===== */
   let archiveStore = [];
+  let archiveMap = {};
   async function loadArchive() {
     document.getElementById('archiveList').innerHTML = '<div style="text-align:center;padding:30px"><div class="spin"></div></div>';
     try {
       const res = await fetch(API + '/get-permits-archive');
       const data = await res.json();
       archiveStore = data.data || [];
+      archiveStore.forEach(p => archiveMap[p.permit_id] = p);
       renderArchiveTable(archiveStore);
     } catch { document.getElementById('archiveList').innerHTML = '<div class="empty">خطأ في تحميل الأرشيف</div>'; }
   }
@@ -508,17 +523,50 @@
   }
 
   function renderArchiveTable(permits) {
-      document.getElementById('archiveList').innerHTML = permits.length ? '<div class="table-wrap"><table><thead><tr><th>اسم الطالبة</th><th>الرقم الجامعي</th><th>المصرح له</th><th>رقم السيارة</th><th>مشرفة الخروج</th><th>مشرفة الدخول</th><th>الحالة</th></tr></thead><tbody>' +
-        permits.map(p => {
-          if (p.rejection_reason) return '<tr><td>'+p.student_name+'</td><td>'+p.student_number+'</td><td>'+p.person_name+'</td><td>'+p.car_plate+'</td><td>'+(p.exit_supervisor_name||'—')+'</td><td>—</td><td><span class="badge" style="background:#fef2f2;color:var(--red)">🚫 مرفوض عند الخروج — '+p.rejection_reason+'</span></td></tr>';
-          const delay = p.actual_return_time ? computeDelay(p.return_time, p.actual_return_time) : '—';
-          const status = p.return_mismatch_reason
-            ? '<span class="badge" style="background:#fef9c3;color:var(--amber)">⚠️ سُمح بالدخول رغم عدم مطابقة — '+p.return_mismatch_reason+'</span>'
-            : '<span class="badge badge-exited">✅ مكتمل بدون ملاحظات</span>';
-          return '<tr><td>'+p.student_name+'</td><td>'+p.student_number+'</td><td>'+p.person_name+'</td><td>'+p.car_plate+'</td><td>'+(p.exit_supervisor_name||'—')+'</td><td>'+(p.return_supervisor_name||'—')+'</td><td>'+status+' '+delay+'</td></tr>';
-        }).join('')
-        + '</tbody></table></div>' : '<div class="empty">لا توجد نتائج مطابقة</div>';
+    document.getElementById('archiveList').innerHTML = permits.length ? '<div class="table-wrap"><table><thead><tr><th>اسم الطالبة</th><th>الرقم الجامعي</th><th>المصرح له</th><th>نوع التصريح</th><th>الحالة</th><th>تفاصيل</th></tr></thead><tbody>' +
+      permits.map(p => {
+        const status = p.rejection_reason
+          ? '<span class="badge" style="background:#fef2f2;color:var(--red)">🚫 مرفوض عند الخروج</span>'
+          : p.return_mismatch_reason
+            ? '<span class="badge" style="background:#fef9c3;color:var(--amber)">⚠️ عدم مطابقة بالعودة</span>'
+            : '<span class="badge badge-exited">✅ مكتمل</span>';
+        return '<tr><td>'+p.student_name+'</td><td>'+p.student_number+'</td><td>'+p.person_name+'</td><td>'+(p.permit_type||'—')+'</td><td>'+status+'</td><td><button class="btn-open" onclick="openArchiveDetail(\''+p.permit_id+'\')">تفاصيل</button></td></tr>';
+      }).join('')
+      + '</tbody></table></div>' : '<div class="empty">لا توجد نتائج مطابقة</div>';
   }
+
+  function openArchiveDetail(id) {
+    const p = archiveMap[id];
+    if (!p) return;
+    const banner = document.getElementById('archiveModalBanner');
+    if (p.rejection_reason) {
+      banner.innerHTML = '<div class="wait-banner" style="background:#fef2f2;color:var(--red);border-color:#fecaca">🚫 تم رفض هذا التصريح عند الخروج — السبب: '+p.rejection_reason+'</div>';
+    } else if (p.return_mismatch_reason) {
+      banner.innerHTML = '<div class="wait-banner">⚠️ سُمح للطالبة بالدخول رغم عدم مطابقة عند العودة — السبب: '+p.return_mismatch_reason+'</div>';
+    } else {
+      banner.innerHTML = '';
+    }
+
+    const rows = [
+      ['اسم الطالبة', p.student_name], ['الرقم الجامعي', p.student_number],
+      ['نوع التصريح', p.permit_type], ['رقم لوحة السيارة', p.car_plate],
+      ['المصرح له', p.person_name], ['صلة القرابة', p.relation],
+      ['تاريخ المغادرة المحدد', p.exit_date], ['وقت المغادرة المحدد', p.exit_time],
+      ['تاريخ الخروج الفعلي', p.actual_exit_date], ['وقت الخروج الفعلي', p.actual_exit_time],
+      ['مشرفة الخروج', p.exit_supervisor_name],
+    ];
+    if (!p.rejection_reason) {
+      rows.push(
+        ['تاريخ العودة المحدد', p.return_date], ['وقت العودة المحدد', p.return_time],
+        ['تاريخ العودة الفعلي', p.actual_return_date], ['وقت العودة الفعلي', p.actual_return_time],
+        ['حالة الالتزام بالوقت', p.actual_return_time ? computeDelay(p.return_time, p.actual_return_time).replace(/<[^>]+>/g,'') : '—'],
+        ['مشرفة الدخول', p.return_supervisor_name]
+      );
+    }
+    document.getElementById('archiveModalInfo').innerHTML = rows.map(([l,v]) => '<div class="info-item"><div class="info-label">'+l+'</div><div class="info-value">'+(v||'—')+'</div></div>').join('');
+    document.getElementById('archiveModalOverlay').classList.add('open');
+  }
+  function closeArchiveModal() { document.getElementById('archiveModalOverlay').classList.remove('open'); }
 
   function infoGrid(p) {
     return [
