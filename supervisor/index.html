@@ -138,7 +138,12 @@
     <div class="page" id="page-archive">
       <div class="page-title">📁 الأرشيف</div>
       <div class="divider"></div>
-      <button class="refresh-btn" onclick="loadArchive()">🔄 تحديث الأرشيف</button>
+      <div class="card" style="margin-bottom:16px">
+        <div class="reader-wrap">
+          <input type="text" class="reader-input" id="archiveSearchInput" placeholder="ابحثي بالرقم الجامعي للطالبة..." oninput="filterArchive()">
+          <button class="refresh-btn" style="margin-bottom:0" onclick="loadArchive()">🔄 تحديث الأرشيف</button>
+        </div>
+      </div>
       <div class="card"><div id="archiveList"><div style="text-align:center;padding:30px"><div class="spin"></div></div></div></div>
     </div>
 
@@ -484,12 +489,25 @@
   }
 
   /* ===== ARCHIVE ===== */
+  let archiveStore = [];
   async function loadArchive() {
     document.getElementById('archiveList').innerHTML = '<div style="text-align:center;padding:30px"><div class="spin"></div></div>';
     try {
       const res = await fetch(API + '/get-permits-archive');
       const data = await res.json();
-      const permits = data.data || [];
+      archiveStore = data.data || [];
+      renderArchiveTable(archiveStore);
+    } catch { document.getElementById('archiveList').innerHTML = '<div class="empty">خطأ في تحميل الأرشيف</div>'; }
+  }
+
+  function filterArchive() {
+    const q = document.getElementById('archiveSearchInput').value.trim();
+    if (!q) { renderArchiveTable(archiveStore); return; }
+    const filtered = archiveStore.filter(p => String(p.student_number).includes(q));
+    renderArchiveTable(filtered);
+  }
+
+  function renderArchiveTable(permits) {
       document.getElementById('archiveList').innerHTML = permits.length ? '<div class="table-wrap"><table><thead><tr><th>اسم الطالبة</th><th>الرقم الجامعي</th><th>المصرح له</th><th>رقم السيارة</th><th>مشرفة الخروج</th><th>مشرفة الدخول</th><th>الحالة</th></tr></thead><tbody>' +
         permits.map(p => {
           if (p.rejection_reason) return '<tr><td>'+p.student_name+'</td><td>'+p.student_number+'</td><td>'+p.person_name+'</td><td>'+p.car_plate+'</td><td>'+(p.exit_supervisor_name||'—')+'</td><td>—</td><td><span class="badge" style="background:#fef2f2;color:var(--red)">🚫 مرفوض عند الخروج — '+p.rejection_reason+'</span></td></tr>';
@@ -499,8 +517,7 @@
             : '<span class="badge badge-exited">✅ مكتمل بدون ملاحظات</span>';
           return '<tr><td>'+p.student_name+'</td><td>'+p.student_number+'</td><td>'+p.person_name+'</td><td>'+p.car_plate+'</td><td>'+(p.exit_supervisor_name||'—')+'</td><td>'+(p.return_supervisor_name||'—')+'</td><td>'+status+' '+delay+'</td></tr>';
         }).join('')
-        + '</tbody></table></div>' : '<div class="empty">لا توجد تصاريح مؤرشفة بعد</div>';
-    } catch { document.getElementById('archiveList').innerHTML = '<div class="empty">خطأ في تحميل الأرشيف</div>'; }
+        + '</tbody></table></div>' : '<div class="empty">لا توجد نتائج مطابقة</div>';
   }
 
   function infoGrid(p) {
