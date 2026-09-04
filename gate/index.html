@@ -117,7 +117,12 @@
     <div class="page" id="page-archive">
       <div class="page-title">📁 الأرشيف</div>
       <div class="divider"></div>
-      <button class="refresh-btn" onclick="loadArchive()">🔄 تحديث الأرشيف</button>
+      <div class="card" style="margin-bottom:16px">
+        <div style="display:flex;gap:12px">
+          <input type="text" class="reader-input" id="archiveSearchInput" placeholder="ابحث بالرقم الجامعي للطالبة..." oninput="filterArchive()" style="flex:1;padding:14px 18px;border:2px solid var(--border);border-radius:12px;font-family:'Tajawal',sans-serif;font-size:16px;outline:none;background:var(--light)">
+          <button class="refresh-btn" style="margin-bottom:0" onclick="loadArchive()">🔄 تحديث الأرشيف</button>
+        </div>
+      </div>
       <div class="card"><div id="archiveList"><div style="text-align:center;padding:30px"><div class="spin"></div></div></div></div>
     </div>
 
@@ -335,23 +340,35 @@
   }
 
   /* ===== ARCHIVE ===== */
+  let archiveStore = [];
   async function loadArchive() {
     document.getElementById('archiveList').innerHTML = '<div style="text-align:center;padding:30px"><div class="spin"></div></div>';
     try {
       const res = await fetch(API + '/get-permits-archive');
       const data = await res.json();
-      const permits = data.data || [];
-      document.getElementById('archiveList').innerHTML = permits.length ? '<div class="table-wrap"><table><thead><tr><th>اسم الطالبة</th><th>رقم السيارة</th><th>المصرح له</th><th>مشرفة الخروج</th><th>مشرفة الدخول</th><th>الحالة</th></tr></thead><tbody>' +
+      archiveStore = data.data || [];
+      renderArchiveTable(archiveStore);
+    } catch { document.getElementById('archiveList').innerHTML = '<div class="empty">خطأ في تحميل الأرشيف</div>'; }
+  }
+
+  function filterArchive() {
+    const q = document.getElementById('archiveSearchInput').value.trim();
+    if (!q) { renderArchiveTable(archiveStore); return; }
+    const filtered = archiveStore.filter(p => String(p.student_number).includes(q));
+    renderArchiveTable(filtered);
+  }
+
+  function renderArchiveTable(permits) {
+      document.getElementById('archiveList').innerHTML = permits.length ? '<div class="table-wrap"><table><thead><tr><th>اسم الطالبة</th><th>الرقم الجامعي</th><th>رقم السيارة</th><th>المصرح له</th><th>مشرفة الخروج</th><th>مشرفة الدخول</th><th>الحالة</th></tr></thead><tbody>' +
         permits.map(p => {
-          if (p.rejection_reason) return '<tr><td>'+p.student_name+'</td><td>'+p.car_plate+'</td><td>'+p.person_name+'</td><td>'+(p.exit_supervisor_name||'—')+'</td><td>—</td><td><span class="badge" style="background:#fef2f2;color:var(--red)">🚫 مرفوض عند الخروج — '+p.rejection_reason+'</span></td></tr>';
+          if (p.rejection_reason) return '<tr><td>'+p.student_name+'</td><td>'+p.student_number+'</td><td>'+p.car_plate+'</td><td>'+p.person_name+'</td><td>'+(p.exit_supervisor_name||'—')+'</td><td>—</td><td><span class="badge" style="background:#fef2f2;color:var(--red)">🚫 مرفوض عند الخروج — '+p.rejection_reason+'</span></td></tr>';
           const delay = p.actual_return_time ? computeDelay(p.return_time, p.actual_return_time) : '✅ تم الخروج';
           const status = p.return_mismatch_reason
             ? '<span class="badge" style="background:#fef9c3;color:var(--amber)">⚠️ عدم مطابقة — '+p.return_mismatch_reason+'</span>'
             : delay;
-          return '<tr><td>'+p.student_name+'</td><td>'+p.car_plate+'</td><td>'+p.person_name+'</td><td>'+(p.exit_supervisor_name||'—')+'</td><td>'+(p.return_supervisor_name||'—')+'</td><td>'+status+'</td></tr>';
+          return '<tr><td>'+p.student_name+'</td><td>'+p.student_number+'</td><td>'+p.car_plate+'</td><td>'+p.person_name+'</td><td>'+(p.exit_supervisor_name||'—')+'</td><td>'+(p.return_supervisor_name||'—')+'</td><td>'+status+'</td></tr>';
         }).join('')
-        + '</tbody></table></div>' : '<div class="empty">لا توجد تصاريح مؤرشفة بعد</div>';
-    } catch { document.getElementById('archiveList').innerHTML = '<div class="empty">خطأ في تحميل الأرشيف</div>'; }
+        + '</tbody></table></div>' : '<div class="empty">لا توجد نتائج مطابقة</div>';
   }
 
   function infoBlock(pairs) {
