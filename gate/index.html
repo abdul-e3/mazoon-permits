@@ -373,15 +373,26 @@
     renderArchiveTable(filtered);
   }
 
+  function isLate(expected, actual) {
+    if (!expected || !actual) return false;
+    const [eh, em] = expected.split(':').map(Number);
+    const [ah, am] = actual.split(':').map(Number);
+    if (isNaN(eh) || isNaN(ah)) return false;
+    return (ah*60+am) - (eh*60+em) > 0;
+  }
+
   function renderArchiveTable(permits) {
-    document.getElementById('archiveList').innerHTML = permits.length ? '<div class="table-wrap"><table><thead><tr><th>اسم الطالبة</th><th>الرقم الجامعي</th><th>رقم السيارة</th><th>نوع التصريح</th><th>الحالة</th><th>تفاصيل</th></tr></thead><tbody>' +
+    document.getElementById('archiveList').innerHTML = permits.length ? '<div class="table-wrap"><table><thead><tr><th>اسم الطالبة</th><th>الرقم الجامعي</th><th>تاريخ التصريح</th><th>نوع التصريح</th><th>الحالة</th><th>تفاصيل</th></tr></thead><tbody>' +
       permits.map(p => {
+        const late = !p.rejection_reason && p.actual_return_time && isLate(p.return_time, p.actual_return_time);
         const status = p.rejection_reason
           ? '<span class="badge" style="background:#fef2f2;color:var(--red)">🚫 مرفوض عند الخروج</span>'
           : p.return_mismatch_reason
             ? '<span class="badge" style="background:#fef9c3;color:var(--amber)">⚠️ عدم مطابقة بالعودة</span>'
-            : '<span class="badge badge-exited">✅ مكتمل</span>';
-        return '<tr><td>'+p.student_name+'</td><td>'+p.student_number+'</td><td>'+p.car_plate+'</td><td>'+(p.permit_type||'—')+'</td><td>'+status+'</td><td><button class="btn-open" onclick="openArchiveDetail(\''+p.permit_id+'\')">تفاصيل</button></td></tr>';
+            : late
+              ? '<span class="badge" style="background:#fef2f2;color:var(--red)">⏰ عادت متأخرة</span>'
+              : '<span class="badge badge-exited">✅ مكتمل بالوقت</span>';
+        return '<tr><td>'+p.student_name+'</td><td>'+p.student_number+'</td><td>'+(p.actual_exit_date||p.exit_date||'—')+'</td><td>'+(p.permit_type||'—')+'</td><td>'+status+'</td><td><button class="btn-open" onclick="openArchiveDetail(\''+p.permit_id+'\')">تفاصيل</button></td></tr>';
       }).join('')
       + '</tbody></table></div>' : '<div class="empty">لا توجد نتائج مطابقة</div>';
   }
@@ -410,7 +421,7 @@
       rows.push(
         ['تاريخ العودة المحدد', p.return_date], ['وقت العودة المحدد', p.return_time],
         ['تاريخ العودة الفعلي', p.actual_return_date], ['وقت العودة الفعلي', p.actual_return_time],
-        ['حالة الالتزام بالوقت', p.actual_return_time ? computeDelay(p.return_time, p.actual_return_time).replace(/<[^>]+>/g,'') : '—'],
+        ['حالة الالتزام بالوقت', p.actual_return_time ? computeDelay(p.return_time, p.actual_return_time) : '—'],
         ['مشرفة الدخول', p.return_supervisor_name]
       );
     }
