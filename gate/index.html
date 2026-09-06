@@ -96,6 +96,7 @@
   <div class="sidebar">
     <div class="sidebar-item active" onclick="showPage(event, 'active')">🚪 قسم الخروج</div>
     <div class="sidebar-item" onclick="showPage(event, 'return')">🔄 قسم العودة</div>
+    <div class="sidebar-item" onclick="showPage(event, 'bus')">🚌 تصريح الحافلة</div>
     <div class="sidebar-item" onclick="showPage(event, 'archive')">📁 الأرشيف</div>
   </div>
   <div class="main">
@@ -112,6 +113,13 @@
       <div class="divider"></div>
       <button class="refresh-btn" onclick="loadReturn()">🔄 تحديث القائمة</button>
       <div class="card"><div id="returnList"><div style="text-align:center;padding:30px"><div class="spin"></div></div></div></div>
+    </div>
+
+    <div class="page" id="page-bus">
+      <div class="page-title">🚌 تصريح الحافلة</div>
+      <div class="divider"></div>
+      <button class="refresh-btn" onclick="loadBusGroups()">🔄 تحديث القائمة</button>
+      <div class="card"><div id="busGroupsList"><div style="text-align:center;padding:30px"><div class="spin"></div></div></div></div>
     </div>
 
     <div class="page" id="page-archive">
@@ -234,6 +242,7 @@
     e.currentTarget.classList.add('active');
     if (page === 'active') loadPermits();
     if (page === 'return') loadReturn();
+    if (page === 'bus') loadBusGroups();
     if (page === 'archive') loadArchive();
   }
 
@@ -435,6 +444,60 @@
   }
 
   function logout() { localStorage.clear(); window.location.href = '/mazoon-permits/staff-login.html'; }
+  /* ===== BUS PERMIT ===== */
+  let busGroupsData = {};
+  async function loadBusGroups() {
+    document.getElementById('busGroupsList').innerHTML = '<div style="text-align:center;padding:30px"><div class="spin"></div></div>';
+    try {
+      const res = await fetch(API + '/get-bus-permits');
+      const data = await res.json();
+      const rows = data.data || [];
+      busGroupsData = {};
+      rows.forEach(r => {
+        if (!busGroupsData[r.driver_national_id]) busGroupsData[r.driver_national_id] = { driver_name: r.driver_name, driver_national_id: r.driver_national_id, status: r.status, students: [] };
+        busGroupsData[r.driver_national_id].students.push(r);
+      });
+      const groups = Object.values(busGroupsData);
+      const busStatusMap = {
+        pending: { label: '⏳ بانتظار دخول الحافلة', cls: 'badge-pending' },
+        bus_entered: { label: '🚌 دخلت — بانتظار المشرفة', cls: 'badge-entered' },
+        approved: { label: '✅ معتمد — جاهز للخروج', cls: 'badge-approved' }
+      };
+      document.getElementById('busGroupsList').innerHTML = groups.length ? groups.map(g => `
+        <div class="card" style="margin-bottom:16px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <div>
+              <strong style="font-size:16px">${g.driver_name}</strong>
+              <span style="color:var(--gray);font-size:13px"> — ${g.driver_national_id}</span>
+              <span class="badge ${busStatusMap[g.status]?.cls||''}" style="margin-right:10px">${busStatusMap[g.status]?.label||g.status}</span>
+            </div>
+            <span style="color:var(--purple);font-weight:700">${g.students.length} طالبة</span>
+          </div>
+          <div class="action-btns" style="margin-top:12px">
+            <button class="btn-action btn-enter" ${g.status!=='pending'?'disabled':''} onclick="confirmBusEnter('${g.driver_national_id}')">✅ تم دخول الحافلة</button>
+            <button class="btn-action btn-exit" ${g.status!=='approved'?'disabled':''} onclick="confirmBusExit('${g.driver_national_id}')">🚌 تم خروج الحافلة</button>
+          </div>
+        </div>
+      `).join('') : '<div class="empty">لا توجد طلبات تصريح حافلة حالياً</div>';
+    } catch { document.getElementById('busGroupsList').innerHTML = '<div class="empty">خطأ في تحميل البيانات</div>'; }
+  }
+  async function confirmBusEnter(nid) {
+    try {
+      const res = await fetch(API + '/bus-entered', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ driver_national_id: nid }) });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message);
+      loadBusGroups();
+    } catch(e) { alert(e.message); }
+  }
+  async function confirmBusExit(nid) {
+    try {
+      const res = await fetch(API + '/bus-exit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ driver_national_id: nid }) });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message);
+      loadBusGroups();
+    } catch(e) { alert(e.message); }
+  }
+
   loadPermits();
   setInterval(() => { loadPermits(); loadReturn(); }, 30000);
 </script>
