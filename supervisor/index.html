@@ -173,7 +173,7 @@
       <div class="field-wrap"><label>⏰ وقت الخروج الفعلي</label><input type="time" id="actualExitTime"></div>
       <div class="field-wrap">
         <label>🔑 رقم المشرفة (إجباري لإتمام الإجراء)</label>
-        <input type="text" id="exitSupervisorCode" placeholder="أدخلي رقمك الخاص" onblur="checkExitSupervisor()" onkeydown="if(event.key==='Enter')checkExitSupervisor()">
+        <input type="text" id="exitSupervisorCode" placeholder="أدخلي رقمك الخاص" autocomplete="off" onblur="checkExitSupervisor()" onkeydown="if(event.key==='Enter')checkExitSupervisor()">
         <div id="exitSupervisorFeedback" style="margin-top:6px;font-size:13px;font-weight:600"></div>
       </div>
       <div class="check-grid">
@@ -212,7 +212,7 @@
     <div id="returnActionSection">
       <div class="field-wrap">
         <label>🔑 رقم المشرفة (إجباري لإتمام الإجراء)</label>
-        <input type="text" id="returnSupervisorCode" placeholder="أدخلي رقمك الخاص" onblur="checkReturnSupervisor()" onkeydown="if(event.key==='Enter')checkReturnSupervisor()">
+        <input type="text" id="returnSupervisorCode" placeholder="أدخلي رقمك الخاص" autocomplete="off" onblur="checkReturnSupervisor()" onkeydown="if(event.key==='Enter')checkReturnSupervisor()">
         <div id="returnSupervisorFeedback" style="margin-top:6px;font-size:13px;font-weight:600"></div>
       </div>
       <div class="check-grid">
