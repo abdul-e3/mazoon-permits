@@ -179,6 +179,7 @@
         <div class="field">
           <label>تاريخ المغادرة</label>
           <input type="date" id="exitDate">
+          <div id="exitDateConfirm" style="font-size:12px;color:var(--purple);font-weight:600;margin-top:4px"></div>
         </div>
         <div class="field">
           <label>وقت المغادرة</label>
@@ -187,6 +188,7 @@
         <div class="field">
           <label>تاريخ العودة</label>
           <input type="date" id="returnDate">
+          <div id="returnDateConfirm" style="font-size:12px;color:var(--purple);font-weight:600;margin-top:4px"></div>
         </div>
         <div class="field">
           <label>وقت العودة</label>
@@ -225,15 +227,27 @@
   let mode = 'new'; // 'new' | 'edit'
   let currentPermitData = null;
 
+  function formatDateConfirm(dateStr) {
+    if (!dateStr) return '';
+    const [y, m, d] = dateStr.split('-');
+    return 'التاريخ المختار: ' + y + '/' + m + '/' + d;
+  }
+  function updateDateConfirm(inputEl, labelId) {
+    document.getElementById(labelId).textContent = formatDateConfirm(inputEl.value);
+  }
+
   exitDateEl.min = todayStr;
   returnDateEl.min = todayStr;
   exitDateEl.addEventListener('change', () => {
     if (exitDateEl.value < todayStr) exitDateEl.value = todayStr;
     returnDateEl.min = exitDateEl.value;
     if (returnDateEl.value < exitDateEl.value) returnDateEl.value = exitDateEl.value;
+    updateDateConfirm(exitDateEl, 'exitDateConfirm');
+    updateDateConfirm(returnDateEl, 'returnDateConfirm');
   });
   returnDateEl.addEventListener('change', () => {
     if (returnDateEl.value < exitDateEl.value) returnDateEl.value = exitDateEl.value;
+    updateDateConfirm(returnDateEl, 'returnDateConfirm');
   });
 
   function showState(name) {
@@ -317,6 +331,8 @@
     exitDateEl.value = todayStr;
     returnDateEl.value = todayStr;
     returnDateEl.min = todayStr;
+    updateDateConfirm(exitDateEl, 'exitDateConfirm');
+    updateDateConfirm(returnDateEl, 'returnDateConfirm');
     exitTimeEl.value = '';
     returnTimeEl.value = '';
     document.getElementById('carPlate').value = '';
@@ -337,6 +353,8 @@
     exitTimeEl.value = p.exit_time || '';
     returnDateEl.min = exitDateEl.value;
     returnDateEl.value = p.return_date || todayStr;
+    updateDateConfirm(exitDateEl, 'exitDateConfirm');
+    updateDateConfirm(returnDateEl, 'returnDateConfirm');
     returnTimeEl.value = p.return_time || '';
     document.getElementById('carPlate').value = p.car_plate || '';
     loadPersons(p.person_national_id);
