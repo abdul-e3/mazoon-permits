@@ -664,6 +664,7 @@
       '<style>body{font-family:Tajawal,Arial,sans-serif;padding:24px}h2{margin-bottom:4px}p{color:#555;margin-top:0}' +
       'table{width:100%;border-collapse:collapse;margin-top:16px}th,td{border:1px solid #ccc;padding:8px 12px;text-align:right}th{background:#f5f3ff}</style>' +
       '</head><body><h2>قائمة طالبات تصريح الحافلة</h2>' +
+      '<p style="color:#555">تاريخ إصدار التقرير: ' + (function(){var d=new Date();var days=['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];var pd=function(n){return String(n).padStart(2,'0');};return days[d.getDay()]+' - '+d.getFullYear()+'/'+pd(d.getMonth()+1)+'/'+pd(d.getDate());})() + '</p>' +
       '<p>السائق: ' + g.driver_name + ' — الرقم المدني: ' + g.driver_national_id + '</p>' +
       '<table><thead><tr><th>#</th><th>اسم الطالبة</th><th>الرقم الجامعي</th></tr></thead><tbody>' +
       g.students.map((s,i) => '<tr><td>'+(i+1)+'</td><td>'+s.student_name+'</td><td>'+s.student_number+'</td></tr>').join('') +
