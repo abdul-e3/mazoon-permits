@@ -251,6 +251,9 @@
 
 <script>
   const API = 'https://mazoon1.abdulonline.online/webhook';
+  function esc(v) {
+    return String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+  }
   const staff = JSON.parse(localStorage.getItem('staff') || 'null');
   if (!staff || staff.role !== 'supervisor') window.location.href = '/mazoon-permits/staff-login.html';
   document.getElementById('navName').textContent = staff.full_name || '';
@@ -269,7 +272,7 @@
       const res = await fetch(API + '/verify-supervisor?code=' + encodeURIComponent(code));
       const data = await res.json();
       if (data.success) {
-        fb.innerHTML = '<span style="color:var(--green)">✅ ' + data.name + '</span>';
+        fb.innerHTML = '<span style="color:var(--green)">✅ ' + esc(data.name) + '</span>';
         exitSupervisorVerified = true; exitSupervisorName = data.name;
       } else {
         fb.innerHTML = '<span style="color:var(--red)">❌ رقم غير صحيح</span>';
@@ -290,7 +293,7 @@
       const res = await fetch(API + '/verify-supervisor?code=' + encodeURIComponent(code));
       const data = await res.json();
       if (data.success) {
-        fb.innerHTML = '<span style="color:var(--green)">✅ ' + data.name + '</span>';
+        fb.innerHTML = '<span style="color:var(--green)">✅ ' + esc(data.name) + '</span>';
         returnSupervisorVerified = true; returnSupervisorName = data.name;
       } else {
         fb.innerHTML = '<span style="color:var(--red)">❌ رقم غير صحيح</span>';
@@ -435,7 +438,7 @@
       document.getElementById('pendingCount').textContent = permits.length;
       const statusBadge = s => s === 'car_entered' ? '<span class="badge badge-entered">🚗 جاهز للمراجعة</span>' : '<span class="badge badge-pending">⏳ بانتظار الدخول</span>';
       document.getElementById('permitsList').innerHTML = permits.length ? '<div class="table-wrap"><table><thead><tr><th>اسم الطالبة</th><th>الرقم الجامعي</th><th>المصرح له</th><th>نوع التصريح</th><th>الحالة</th><th>فتح</th></tr></thead><tbody>' +
-        permits.map(p => '<tr><td>'+p.student_name+'</td><td>'+p.student_number+'</td><td>'+p.person_name+'</td><td>'+p.permit_type+'</td><td>'+statusBadge(p.status)+'</td><td><button class="btn-open" onclick="openModalById(\''+p.permit_id+'\')">فتح</button></td></tr>').join('')
+        permits.map(p => '<tr><td>'+esc(p.student_name)+'</td><td>'+esc(p.student_number)+'</td><td>'+esc(p.person_name)+'</td><td>'+esc(p.permit_type)+'</td><td>'+statusBadge(p.status)+'</td><td><button class="btn-open" onclick="openModalById(\''+esc(p.permit_id)+'\')">فتح</button></td></tr>').join('')
         + '</tbody></table></div>' : '<div class="empty">لا توجد تصاريح حالياً</div>';
     } catch { document.getElementById('permitsList').innerHTML = '<div class="empty">خطأ في تحميل البيانات</div>'; }
   }
@@ -457,7 +460,7 @@
     else if (p.status === 'return_approved') { banner.style.display = 'block'; banner.textContent = '✅ تمت الموافقة — بانتظار تأكيد خروج السيارة نهائياً من البوابة'; }
     else { banner.style.display = 'none'; }
     const delayBox = document.getElementById('returnDelayBox');
-    if (p.actual_return_time) { delayBox.style.display = 'block'; delayBox.innerHTML = '⏰ وقت العودة الفعلي: ' + p.actual_return_time + ' — ' + computeDelay(p.return_time, p.actual_return_time); }
+    if (p.actual_return_time) { delayBox.style.display = 'block'; delayBox.innerHTML = '⏰ وقت العودة الفعلي: ' + esc(p.actual_return_time) + ' — ' + computeDelay(p.return_time, p.actual_return_time); }
     else { delayBox.style.display = 'none'; }
     document.getElementById('returnPermitInfo').innerHTML = infoGrid(p);
     updateReturnButtonState();
@@ -505,7 +508,7 @@
       document.getElementById('returnCount').textContent = permits.filter(p => p.status !== 'return_approved').length;
       const statusBadge = s => s === 'exited' ? '<span class="badge badge-pending">⏳ بانتظار دخول العودة</span>' : s === 'return_car_entered' ? '<span class="badge badge-entered">🚗 جاهز للمراجعة</span>' : '<span class="badge badge-exited">✅ سُمح بالدخول</span>';
       document.getElementById('returnList').innerHTML = permits.length ? '<div class="table-wrap"><table><thead><tr><th>اسم الطالبة</th><th>الرقم الجامعي</th><th>المصرح له</th><th>وقت العودة المحدد</th><th>الحالة</th><th>التأخير</th><th>فتح</th></tr></thead><tbody>' +
-        permits.map(p => '<tr><td>'+p.student_name+'</td><td>'+p.student_number+'</td><td>'+p.person_name+'</td><td>'+p.return_time+'</td><td>'+statusBadge(p.status)+'</td><td>'+(p.actual_return_time ? computeDelay(p.return_time, p.actual_return_time) : '—')+'</td><td><button class="btn-open" onclick="openReturnModalById(\''+p.permit_id+'\')">فتح</button></td></tr>').join('')
+        permits.map(p => '<tr><td>'+esc(p.student_name)+'</td><td>'+esc(p.student_number)+'</td><td>'+esc(p.person_name)+'</td><td>'+esc(p.return_time)+'</td><td>'+statusBadge(p.status)+'</td><td>'+(p.actual_return_time ? computeDelay(p.return_time, p.actual_return_time) : '—')+'</td><td><button class="btn-open" onclick="openReturnModalById(\''+esc(p.permit_id)+'\')">فتح</button></td></tr>').join('')
         + '</tbody></table></div>' : '<div class="empty">لا توجد طلبات في مرحلة العودة</div>';
     } catch { document.getElementById('returnList').innerHTML = '<div class="empty">خطأ في تحميل البيانات</div>'; }
   }
@@ -550,7 +553,7 @@
             : late
               ? '<span class="badge" style="background:#fef2f2;color:var(--red)">⏰ عادت متأخرة</span>'
               : '<span class="badge badge-exited">✅ مكتمل بالوقت</span>';
-        return '<tr><td>'+p.student_name+'</td><td>'+p.student_number+'</td><td>'+p.person_name+'</td><td>'+(p.actual_exit_date||p.exit_date||'—')+'</td><td>'+(p.permit_type||'—')+'</td><td>'+status+'</td><td><button class="btn-open" onclick="openArchiveDetail(\''+p.permit_id+'\')">تفاصيل</button></td></tr>';
+        return '<tr><td>'+esc(p.student_name)+'</td><td>'+esc(p.student_number)+'</td><td>'+esc(p.person_name)+'</td><td>'+esc(p.actual_exit_date||p.exit_date||'—')+'</td><td>'+esc(p.permit_type||'—')+'</td><td>'+status+'</td><td><button class="btn-open" onclick="openArchiveDetail(\''+esc(p.permit_id)+'\')">تفاصيل</button></td></tr>';
       }).join('')
       + '</tbody></table></div>' : '<div class="empty">لا توجد نتائج مطابقة</div>';
   }
@@ -560,9 +563,9 @@
     if (!p) return;
     const banner = document.getElementById('archiveModalBanner');
     if (p.rejection_reason) {
-      banner.innerHTML = '<div class="wait-banner" style="background:#fef2f2;color:var(--red);border-color:#fecaca">🚫 تم رفض هذا التصريح عند الخروج — السبب: '+p.rejection_reason+'</div>';
+      banner.innerHTML = '<div class="wait-banner" style="background:#fef2f2;color:var(--red);border-color:#fecaca">🚫 تم رفض هذا التصريح عند الخروج — السبب: '+esc(p.rejection_reason)+'</div>';
     } else if (p.return_mismatch_reason) {
-      banner.innerHTML = '<div class="wait-banner">⚠️ سُمح للطالبة بالدخول رغم عدم مطابقة عند العودة — السبب: '+p.return_mismatch_reason+'</div>';
+      banner.innerHTML = '<div class="wait-banner">⚠️ سُمح للطالبة بالدخول رغم عدم مطابقة عند العودة — السبب: '+esc(p.return_mismatch_reason)+'</div>';
     } else {
       banner.innerHTML = '';
     }
@@ -583,7 +586,7 @@
         ['مشرفة الدخول', p.return_supervisor_name]
       );
     }
-    document.getElementById('archiveModalInfo').innerHTML = rows.map(([l,v]) => '<div class="info-item"><div class="info-label">'+l+'</div><div class="info-value">'+(v||'—')+'</div></div>').join('');
+    document.getElementById('archiveModalInfo').innerHTML = rows.map(([l,v]) => '<div class="info-item"><div class="info-label">'+esc(l)+'</div><div class="info-value">'+esc(v||'—')+'</div></div>').join('');
     document.getElementById('archiveModalOverlay').classList.add('open');
   }
   function closeArchiveModal() { document.getElementById('archiveModalOverlay').classList.remove('open'); }
@@ -596,7 +599,7 @@
       ['الرقم المدني', p.person_national_id], ['رقم لوحة السيارة', p.car_plate],
       ['تاريخ المغادرة', p.exit_date], ['وقت المغادرة', p.exit_time],
       ['تاريخ العودة', p.return_date], ['وقت العودة المحدد', p.return_time],
-    ].map(([l,v]) => '<div class="info-item"><div class="info-label">'+l+'</div><div class="info-value">'+(v||'—')+'</div></div>').join('');
+    ].map(([l,v]) => '<div class="info-item"><div class="info-label">'+esc(l)+'</div><div class="info-value">'+esc(v||'—')+'</div></div>').join('');
   }
 
   function showAlert(el, msg, type) {
@@ -629,22 +632,22 @@
         <div class="card" style="margin-bottom:16px">
           <div style="display:flex;justify-content:space-between;align-items:center">
             <div>
-              <strong style="font-size:16px">${g.driver_name}</strong>
-              <span style="color:var(--gray);font-size:13px"> — ${g.driver_national_id}</span>
-              <span class="badge ${busStatusMap[g.status]?.cls||''}" style="margin-right:10px">${busStatusMap[g.status]?.label||g.status}</span>
+              <strong style="font-size:16px">${esc(g.driver_name)}</strong>
+              <span style="color:var(--gray);font-size:13px"> — ${esc(g.driver_national_id)}</span>
+              <span class="badge ${busStatusMap[g.status]?.cls||''}" style="margin-right:10px">${esc(busStatusMap[g.status]?.label||g.status)}</span>
             </div>
             <span style="color:var(--purple);font-weight:700">${g.students.length} طالبة</span>
           </div>
           <div style="margin-top:12px;display:flex;gap:10px">
-            <button class="refresh-btn" style="margin-bottom:0" onclick="toggleBusStudents('${g.driver_national_id}')">👥 عرض/إخفاء الطالبات</button>
-            <button class="refresh-btn" style="margin-bottom:0" onclick="exportGroupPDF('${g.driver_national_id}')">📄 تصدير PDF</button>
+            <button class="refresh-btn" style="margin-bottom:0" onclick="toggleBusStudents('${esc(g.driver_national_id)}')">👥 عرض/إخفاء الطالبات</button>
+            <button class="refresh-btn" style="margin-bottom:0" onclick="exportGroupPDF('${esc(g.driver_national_id)}')">📄 تصدير PDF</button>
           </div>
-          <div id="busStudents-${g.driver_national_id}" style="display:none;margin-top:14px">
+          <div id="busStudents-${esc(g.driver_national_id)}" style="display:none;margin-top:14px">
             <div class="table-wrap"><table><thead><tr><th>#</th><th>اسم الطالبة</th><th>الرقم الجامعي</th></tr></thead><tbody>
-              ${g.students.map((s,i) => '<tr><td>'+(i+1)+'</td><td>'+s.student_name+'</td><td>'+s.student_number+'</td></tr>').join('')}
+              ${g.students.map((s,i) => '<tr><td>'+(i+1)+'</td><td>'+esc(s.student_name)+'</td><td>'+esc(s.student_number)+'</td></tr>').join('')}
             </tbody></table></div>
           </div>
-          <button class="btn-approve" style="margin-top:14px" ${g.status!=='bus_entered'?'disabled':''} onclick="approveBusGroup('${g.driver_national_id}')">✅ موافقة جماعية على الخروج</button>
+          <button class="btn-approve" style="margin-top:14px" ${g.status!=='bus_entered'?'disabled':''} onclick="approveBusGroup('${esc(g.driver_national_id)}')">✅ موافقة جماعية على الخروج</button>
         </div>
       `).join('') : '<div class="empty">لا توجد طلبات تصريح حافلة حالياً</div>';
     } catch { document.getElementById('busGroupsList').innerHTML = '<div class="empty">خطأ في تحميل البيانات</div>'; }
@@ -660,14 +663,14 @@
     if (!g) return;
     const win = window.open('', '_blank');
     win.document.write(
-    '<html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>' + 'تصريح_حافلة_' + g.driver_name.replace(/\s+/g,'_') + '_' + (function(){var d=new Date();var pd=function(n){return String(n).padStart(2,'0');};return d.getFullYear()+'-'+pd(d.getMonth()+1)+'-'+pd(d.getDate());})() + '</title>' +
+    '<html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>' + esc('تصريح_حافلة_' + g.driver_name.replace(/\s+/g,'_') + '_' + (function(){var d=new Date();var pd=function(n){return String(n).padStart(2,'0');};return d.getFullYear()+'-'+pd(d.getMonth()+1)+'-'+pd(d.getDate());})()) + '</title>' +
       '<style>body{font-family:Tajawal,Arial,sans-serif;padding:24px}h2{margin-bottom:4px}p{color:#555;margin-top:0}' +
       'table{width:100%;border-collapse:collapse;margin-top:16px}th,td{border:1px solid #ccc;padding:8px 12px;text-align:right}th{background:#f5f3ff}</style>' +
       '</head><body><h2>قائمة طالبات تصريح الحافلة</h2>' +
       '<p style="color:#555">تاريخ إصدار التقرير: ' + (function(){var d=new Date();var days=['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];var pd=function(n){return String(n).padStart(2,'0');};return days[d.getDay()]+' - '+d.getFullYear()+'/'+pd(d.getMonth()+1)+'/'+pd(d.getDate());})() + '</p>' +
-      '<p>السائق: ' + g.driver_name + ' — الرقم المدني: ' + g.driver_national_id + '</p>' +
+      '<p>السائق: ' + esc(g.driver_name) + ' — الرقم المدني: ' + esc(g.driver_national_id) + '</p>' +
       '<table><thead><tr><th>#</th><th>اسم الطالبة</th><th>الرقم الجامعي</th></tr></thead><tbody>' +
-      g.students.map((s,i) => '<tr><td>'+(i+1)+'</td><td>'+s.student_name+'</td><td>'+s.student_number+'</td></tr>').join('') +
+      g.students.map((s,i) => '<tr><td>'+(i+1)+'</td><td>'+esc(s.student_name)+'</td><td>'+esc(s.student_number)+'</td></tr>').join('') +
       '</tbody></table></body></html>'
     );
     win.document.close();
