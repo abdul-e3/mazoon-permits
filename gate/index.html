@@ -202,6 +202,9 @@
 
 <script>
   const API = 'https://mazoon1.abdulonline.online/webhook';
+  function esc(v) {
+    return String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+  }
   const staff = JSON.parse(localStorage.getItem('staff') || 'null');
   if (!staff || staff.role !== 'guard') window.location.href = '/mazoon-permits/staff-login.html';
   document.getElementById('navName').textContent = staff.full_name || '';
@@ -258,7 +261,7 @@
     else { rejectBanner.style.display = 'none'; }
     document.getElementById('studentInfo').innerHTML = infoBlock([['اسم الطالبة',p.student_name],['الرقم الجامعي',p.student_number],['رقم الغرفة',p.room_number],['نوع التصريح',p.permit_type]]);
     document.getElementById('personInfo').innerHTML = infoBlock([['اسم المصرح له',p.person_name],['الرقم المدني',p.person_national_id],['رقم الهاتف',p.person_phone||'—'],['صلة القرابة',p.relation]]);
-    document.getElementById('carInfo').innerHTML = '<div class="info-item highlight"><div class="info-label">رقم لوحة السيارة 🚗</div><div class="info-value" style="font-size:18px;color:var(--purple)">'+(p.car_plate||'—')+'</div></div><div class="info-item"><div class="info-label">تاريخ المغادرة</div><div class="info-value">'+(p.exit_date||'—')+'</div></div><div class="info-item"><div class="info-label">وقت المغادرة</div><div class="info-value">'+(p.exit_time||'—')+'</div></div><div class="info-item"><div class="info-label">وقت العودة المحدد</div><div class="info-value">'+(p.return_time||'—')+'</div></div>';
+    document.getElementById('carInfo').innerHTML = '<div class="info-item highlight"><div class="info-label">رقم لوحة السيارة 🚗</div><div class="info-value" style="font-size:18px;color:var(--purple)">'+esc(p.car_plate||'—')+'</div></div><div class="info-item"><div class="info-label">تاريخ المغادرة</div><div class="info-value">'+esc(p.exit_date||'—')+'</div></div><div class="info-item"><div class="info-label">وقت المغادرة</div><div class="info-value">'+esc(p.exit_time||'—')+'</div></div><div class="info-item"><div class="info-label">وقت العودة المحدد</div><div class="info-value">'+esc(p.return_time||'—')+'</div></div>';
     document.getElementById('btnEnter').disabled = (s !== 'pending');
     const btnExit = document.getElementById('btnExit');
     if (s === 'rejected') {
@@ -305,7 +308,7 @@
       const permits = data.data || [];
       permits.forEach(p => permitsStore[p.permit_id] = p);
       document.getElementById('permitsList').innerHTML = permits.length ? '<div class="table-wrap"><table><thead><tr><th>اسم الطالبة</th><th>رقم اللوحة 🚗</th><th>المصرح له</th><th>هاتفه</th><th>وقت العودة</th><th>الحالة</th><th>فتح</th></tr></thead><tbody>' +
-        permits.map(p => '<tr><td><strong>'+p.student_name+'</strong></td><td style="font-weight:800;color:var(--purple);font-size:16px">'+p.car_plate+'</td><td>'+p.person_name+'</td><td>'+(p.person_phone||'—')+'</td><td>'+p.return_time+'</td><td><span class="badge '+(statusMap[p.status]?.cls||'')+'">'+(statusMap[p.status]?.label||p.status)+'</span></td><td><button class="btn-open" onclick="openModalById(\''+p.permit_id+'\')">فتح</button></td></tr>').join('')
+        permits.map(p => '<tr><td><strong>'+esc(p.student_name)+'</strong></td><td style="font-weight:800;color:var(--purple);font-size:16px">'+esc(p.car_plate)+'</td><td>'+esc(p.person_name)+'</td><td>'+esc(p.person_phone||'—')+'</td><td>'+esc(p.return_time)+'</td><td><span class="badge '+(statusMap[p.status]?.cls||'')+'">'+esc(statusMap[p.status]?.label||p.status)+'</span></td><td><button class="btn-open" onclick="openModalById(\''+esc(p.permit_id)+'\')">فتح</button></td></tr>').join('')
         + '</tbody></table></div>' : '<div class="empty">لا توجد تصاريح نشطة حالياً</div>';
     } catch { document.getElementById('permitsList').innerHTML = '<div class="empty">خطأ في تحميل البيانات</div>'; }
   }
@@ -319,9 +322,9 @@
     document.getElementById('returnStatusWrap').innerHTML = '<span class="status-badge ' + (returnStatusMap[s]?.cls || '') + '">' + (returnStatusMap[s]?.label || s) + '</span>';
     document.getElementById('returnStudentInfo').innerHTML = infoBlock([['اسم الطالبة',p.student_name],['الرقم الجامعي',p.student_number],['رقم الغرفة',p.room_number]]);
     document.getElementById('returnPersonInfo').innerHTML = infoBlock([['اسم المصرح له',p.person_name],['الرقم المدني',p.person_national_id],['رقم الهاتف',p.person_phone||'—'],['صلة القرابة',p.relation]]);
-    document.getElementById('returnCarInfo').innerHTML = '<div class="info-item highlight"><div class="info-label">رقم لوحة السيارة 🚗</div><div class="info-value" style="font-size:18px;color:var(--purple)">'+(p.car_plate||'—')+'</div></div><div class="info-item"><div class="info-label">وقت العودة المحدد</div><div class="info-value">'+(p.return_time||'—')+'</div></div>';
+    document.getElementById('returnCarInfo').innerHTML = '<div class="info-item highlight"><div class="info-label">رقم لوحة السيارة 🚗</div><div class="info-value" style="font-size:18px;color:var(--purple)">'+esc(p.car_plate||'—')+'</div></div><div class="info-item"><div class="info-label">وقت العودة المحدد</div><div class="info-value">'+esc(p.return_time||'—')+'</div></div>';
     const delayBox = document.getElementById('returnDelayBox');
-    if (p.actual_return_time) { delayBox.style.display = 'block'; delayBox.innerHTML = '⏰ وقت العودة الفعلي: ' + p.actual_return_time + ' — ' + computeDelay(p.return_time, p.actual_return_time); }
+    if (p.actual_return_time) { delayBox.style.display = 'block'; delayBox.innerHTML = '⏰ وقت العودة الفعلي: ' + esc(p.actual_return_time) + ' — ' + computeDelay(p.return_time, p.actual_return_time); }
     else { delayBox.style.display = 'none'; }
     document.getElementById('actualReturnTime').value = new Date().toTimeString().slice(0,5);
     document.getElementById('returnTimeWrap').style.display = (s === 'exited') ? 'block' : 'none';
@@ -356,7 +359,7 @@
       const permits = data.data || [];
       permits.forEach(p => returnStore[p.permit_id] = p);
       document.getElementById('returnList').innerHTML = permits.length ? '<div class="table-wrap"><table><thead><tr><th>اسم الطالبة</th><th>رقم اللوحة 🚗</th><th>وقت العودة المحدد</th><th>الحالة</th><th>التأخير</th><th>فتح</th></tr></thead><tbody>' +
-        permits.map(p => '<tr><td><strong>'+p.student_name+'</strong></td><td style="font-weight:800;color:var(--purple);font-size:16px">'+p.car_plate+'</td><td>'+p.return_time+'</td><td><span class="badge '+(returnStatusMap[p.status]?.cls||'')+'">'+(returnStatusMap[p.status]?.label||p.status)+'</span></td><td>'+(p.actual_return_time ? computeDelay(p.return_time, p.actual_return_time) : '—')+'</td><td><button class="btn-open" onclick="openReturnModalById(\''+p.permit_id+'\')">فتح</button></td></tr>').join('')
+        permits.map(p => '<tr><td><strong>'+esc(p.student_name)+'</strong></td><td style="font-weight:800;color:var(--purple);font-size:16px">'+esc(p.car_plate)+'</td><td>'+esc(p.return_time)+'</td><td><span class="badge '+(returnStatusMap[p.status]?.cls||'')+'">'+esc(returnStatusMap[p.status]?.label||p.status)+'</span></td><td>'+(p.actual_return_time ? computeDelay(p.return_time, p.actual_return_time) : '—')+'</td><td><button class="btn-open" onclick="openReturnModalById(\''+esc(p.permit_id)+'\')">فتح</button></td></tr>').join('')
         + '</tbody></table></div>' : '<div class="empty">لا توجد طلبات في مرحلة العودة</div>';
     } catch { document.getElementById('returnList').innerHTML = '<div class="empty">خطأ في تحميل البيانات</div>'; }
   }
@@ -401,7 +404,7 @@
             : late
               ? '<span class="badge" style="background:#fef2f2;color:var(--red)">⏰ عادت متأخرة</span>'
               : '<span class="badge badge-exited">✅ مكتمل بالوقت</span>';
-        return '<tr><td>'+p.student_name+'</td><td>'+p.student_number+'</td><td>'+(p.actual_exit_date||p.exit_date||'—')+'</td><td>'+(p.permit_type||'—')+'</td><td>'+status+'</td><td><button class="btn-open" onclick="openArchiveDetail(\''+p.permit_id+'\')">تفاصيل</button></td></tr>';
+        return '<tr><td>'+esc(p.student_name)+'</td><td>'+esc(p.student_number)+'</td><td>'+esc(p.actual_exit_date||p.exit_date||'—')+'</td><td>'+esc(p.permit_type||'—')+'</td><td>'+status+'</td><td><button class="btn-open" onclick="openArchiveDetail(\''+esc(p.permit_id)+'\')">تفاصيل</button></td></tr>';
       }).join('')
       + '</tbody></table></div>' : '<div class="empty">لا توجد نتائج مطابقة</div>';
   }
@@ -411,9 +414,9 @@
     if (!p) return;
     const banner = document.getElementById('archiveModalBanner');
     if (p.rejection_reason) {
-      banner.innerHTML = '<div class="wait-banner" style="background:#fef2f2;color:var(--red);border-color:#fecaca">🚫 تم رفض هذا التصريح عند الخروج — السبب: '+p.rejection_reason+'</div>';
+      banner.innerHTML = '<div class="wait-banner" style="background:#fef2f2;color:var(--red);border-color:#fecaca">🚫 تم رفض هذا التصريح عند الخروج — السبب: '+esc(p.rejection_reason)+'</div>';
     } else if (p.return_mismatch_reason) {
-      banner.innerHTML = '<div class="wait-banner">⚠️ سُمح للطالبة بالدخول رغم عدم مطابقة عند العودة — السبب: '+p.return_mismatch_reason+'</div>';
+      banner.innerHTML = '<div class="wait-banner">⚠️ سُمح للطالبة بالدخول رغم عدم مطابقة عند العودة — السبب: '+esc(p.return_mismatch_reason)+'</div>';
     } else {
       banner.innerHTML = '';
     }
@@ -434,13 +437,13 @@
         ['مشرفة الدخول', p.return_supervisor_name]
       );
     }
-    document.getElementById('archiveModalInfo').innerHTML = rows.map(([l,v]) => '<div class="info-item"><div class="info-label">'+l+'</div><div class="info-value">'+(v||'—')+'</div></div>').join('');
+    document.getElementById('archiveModalInfo').innerHTML = rows.map(([l,v]) => '<div class="info-item"><div class="info-label">'+esc(l)+'</div><div class="info-value">'+esc(v||'—')+'</div></div>').join('');
     document.getElementById('archiveModalOverlay').classList.add('open');
   }
   function closeArchiveModal() { document.getElementById('archiveModalOverlay').classList.remove('open'); }
 
   function infoBlock(pairs) {
-    return pairs.map(([l,v]) => '<div class="info-item"><div class="info-label">'+l+'</div><div class="info-value">'+(v||'—')+'</div></div>').join('');
+    return pairs.map(([l,v]) => '<div class="info-item"><div class="info-label">'+esc(l)+'</div><div class="info-value">'+esc(v||'—')+'</div></div>').join('');
   }
 
   function logout() { localStorage.clear(); window.location.href = '/mazoon-permits/staff-login.html'; }
@@ -467,15 +470,15 @@
         <div class="card" style="margin-bottom:16px">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
             <div>
-              <strong style="font-size:16px">${g.driver_name}</strong>
-              <span style="color:var(--gray);font-size:13px"> — ${g.driver_national_id}</span>
-              <span class="badge ${busStatusMap[g.status]?.cls||''}" style="margin-right:10px">${busStatusMap[g.status]?.label||g.status}</span>
+              <strong style="font-size:16px">${esc(g.driver_name)}</strong>
+              <span style="color:var(--gray);font-size:13px"> — ${esc(g.driver_national_id)}</span>
+              <span class="badge ${busStatusMap[g.status]?.cls||''}" style="margin-right:10px">${esc(busStatusMap[g.status]?.label||g.status)}</span>
             </div>
             <span style="color:var(--purple);font-weight:700">${g.students.length} طالبة</span>
           </div>
           <div class="action-btns" style="margin-top:12px">
-            <button class="btn-action btn-enter" ${g.status!=='pending'?'disabled':''} onclick="confirmBusEnter('${g.driver_national_id}')">✅ تم دخول الحافلة</button>
-            <button class="btn-action btn-exit" ${g.status!=='approved'?'disabled':''} onclick="confirmBusExit('${g.driver_national_id}')">🚌 تم خروج الحافلة</button>
+            <button class="btn-action btn-enter" ${g.status!=='pending'?'disabled':''} onclick="confirmBusEnter('${esc(g.driver_national_id)}')">✅ تم دخول الحافلة</button>
+            <button class="btn-action btn-exit" ${g.status!=='approved'?'disabled':''} onclick="confirmBusExit('${esc(g.driver_national_id)}')">🚌 تم خروج الحافلة</button>
           </div>
         </div>
       `).join('') : '<div class="empty">لا توجد طلبات تصريح حافلة حالياً</div>';
