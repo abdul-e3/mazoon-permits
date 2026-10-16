@@ -92,6 +92,9 @@
 </div>
 <script>
   const API = 'https://mazoon1.abdulonline.online/webhook';
+  function esc(v) {
+    return String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+  }
   const student = JSON.parse(localStorage.getItem('student') || 'null');
   if (!student) window.location.href = 'index.html';
   document.getElementById('navName').textContent = student.full_name || '';
@@ -133,7 +136,7 @@
       const sel = document.getElementById('driverSelect');
       if (!data.success || !data.data.length) { sel.innerHTML = '<option value="">لا يوجد مصرح لهم مسجلون</option>'; return; }
       sel.innerHTML = '<option value="">اختاري السائق</option>' +
-        data.data.map(a => '<option value=\'' + JSON.stringify(a).replace(/'/g,'&apos;') + '\'>' + a.full_name + ' — ' + a.relation + '</option>').join('');
+        data.data.map(a => '<option value=\'' + JSON.stringify(a).replace(/'/g,'&apos;') + '\'>' + esc(a.full_name) + ' — ' + esc(a.relation) + '</option>').join('');
     } catch(e) { console.error(e); }
   }
 
